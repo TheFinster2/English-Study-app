@@ -11,10 +11,15 @@
    Neither is acceptable and both are mechanical, so the fix should be too.
    ============================================================================ */
 
-/** Cut the last ", which…" / ", since…" / ", and…" clause off a sentence. */
+/** Cut the last trailing clause off a sentence, at a comma or em-dash boundary. */
 function trimClause(s) {
   const m = s.match(/^(.*),\s+(which|since|and|so|where|whose|but|because|as|though|when|whereas|the|his|her|its|their|it|they|each|both|one|nothing|every)\b[^,]*$/);
   if (m && m[1].length > 40) return m[1];
+  /* An em-dash gloss is the other clause boundary this prose uses constantly, and it is
+     the one that lets a KEY be shortened — keys are often a claim plus a dash plus its
+     own justification, and the justification is already in the `why`. */
+  const d = s.lastIndexOf(" — ");
+  if (d > 30) return s.slice(0, d);
   // No clean clause boundary: fall back to the last comma if enough text survives.
   const i = s.lastIndexOf(", ");
   if (i > 45) return s.slice(0, i);
@@ -23,21 +28,51 @@ function trimClause(s) {
 
 /**
  * Push the key's length rank toward `targetRank` (1 = longest) for one question.
- * Mutates nothing; returns { choices, changed }.
+ *
+ * Two directions, both by trimming:
+ *   rank too HIGH (key too short) → trim the distractors that are longer than it
+ *   rank too LOW  (key too long)  → trim the KEY
+ *
+ * Trimming the key is a quality improvement as often as not: the clause being removed
+ * is usually one that duplicates what the `why` already explains, and a key reads
+ * better as a claim than as a claim plus its own justification.
+ *
+ * Mutates nothing; returns { choices, changed, rank }.
  */
 function rebalanceOne(q, targetRank) {
   const choices = q.choices.slice();
   const keyLen = () => choices[q.a].length;
   const rankNow = () => choices.filter((c, i) => i !== q.a && c.length > keyLen()).length + 1;
   let changed = 0;
-  // Trim the longest distractor repeatedly until we are at or below the target rank.
-  for (let guard = 0; guard < 12 && rankNow() > targetRank; guard++) {
-    let pick = -1, best = -1;
-    choices.forEach((c, i) => { if (i !== q.a && c.length > keyLen() && c.length > best) { best = c.length; pick = i; } });
-    if (pick < 0) break;
-    const t = trimClause(choices[pick]);
-    if (!t) break;
-    choices[pick] = t;
+
+  for (let guard = 0; guard < 14; guard++) {
+    const rank = rankNow();
+    if (rank === targetRank) break;
+
+    let idx, next;
+    if (rank > targetRank) {
+      // Key is too short: shorten the longest distractor still above it.
+      let pick = -1, best = -1;
+      choices.forEach((c, i) => { if (i !== q.a && c.length > keyLen() && c.length > best) { best = c.length; pick = i; } });
+      if (pick < 0) break;
+      idx = pick;
+    } else {
+      // Key is too long: shorten the key until enough distractors overtake it.
+      idx = q.a;
+    }
+    next = trimClause(choices[idx]);
+    if (!next) break;
+
+    /* A single cut can move the key two ranks at once, which is how earlier passes
+       oscillated between over- and under-correction. Try the cut, and revert it if it
+       lands further from the target than it started. */
+    const before = choices[idx];
+    choices[idx] = next;
+    const after = rankNow();
+    if (Math.abs(after - targetRank) >= Math.abs(rank - targetRank)) {
+      choices[idx] = before;
+      break;
+    }
     changed++;
   }
   return { choices, changed, rank: rankNow() };
