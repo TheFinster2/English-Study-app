@@ -1,0 +1,165 @@
+# Close Reading
+
+A study app for **HSC English Advanced**. Techniques, quotes, band descriptors, essay
+structure, and marking for the sentences you type — all of it running on the phone in your
+hand, offline, with no account and no server.
+
+> This app trains the moves and marks your sentences. Your teacher marks the essay.
+
+That sentence is the whole design brief. What an app can do honestly is drill technique
+recognition, hold quotes in your head, teach you what a Band 6 paragraph looks like from
+the inside, and tell you whether one typed sentence means roughly what a good answer
+means. What it cannot do is read 1,000 words and give you a mark, so it doesn't pretend to.
+
+## Getting it running
+
+```
+git clone https://github.com/TheFinster2/English-Study-app.git
+cd English-Study-app
+python3 -m http.server 8000
+```
+
+Then open <http://localhost:8000>. There is **no build step** — no npm install, no
+bundler, no transpiler. `index.html` loads plain `<script>` tags in dependency order and
+that is the entire toolchain.
+
+The clone is about **35 MB**, most of it the language model in `models/minilm/`. That is
+checked in deliberately (see below) and not stored in Git LFS.
+
+### On a phone
+
+Open the site in Safari or Chrome and use **Add to Home Screen**. It installs as a PWA:
+full screen, its own icon, and it works with no signal once the shell has cached. Designed
+at 390px and checked at 360px with zero horizontal scrolling.
+
+### Publishing it
+
+Push to `main`, then in the repository **Settings → Pages**, set Source to *Deploy from a
+branch*, branch `main`, folder `/ (root)`. That toggle is a manual step — it cannot be
+done from the command line or by an agent, so it is on you. Every path in the app is
+relative and resolved against `document.baseURI`, so the `/English-Study-app/` subpath
+works without configuration.
+
+## Choosing your texts
+
+Open `js/data/texts.js` and edit one object:
+
+```js
+EN.DATA.activeTexts = {
+  common:  "1984",
+  moduleA: ["donne", "wit"],
+  moduleB: "henry4",
+  moduleC: "craft"
+};
+```
+
+Everything downstream keys off this — which questions are drawn, which quotes enter the
+Vault, which paragraphs the Marking Desk shows, which texts get their own mastery bar.
+Text ids come from the files in `js/data/texts/`. The repo ships:
+
+| Module | Texts included |
+| --- | --- |
+| Common — Texts and Human Experiences | *Nineteen Eighty-Four* |
+| Module A — Textual Conversations | Donne's poetry · *W;t* (Edson) |
+| Module B — Critical Study | *King Henry IV, Part 1* |
+| Module C — The Craft of Writing | skills-only, text-agnostic |
+| Starters | *The Crucible* · *Hamlet* · *The Tempest* · *Hag-Seed* |
+
+About a third of the app — techniques, rubric verbs, band descriptors, module concepts,
+essay architecture, question deconstruction — is text-agnostic and works for any student.
+
+Extracts are quoted for study and attributed to their composers: a line, a sentence, a
+short passage. Never a whole poem, never a chapter. Buy the texts.
+
+## How marking works
+
+Three layers, in order, and only the first two touch your XP.
+
+**Layer A — structural.** Exact and normalised comparison. Multiple choice, ordering,
+band selection, grid cells. Deterministic and instant.
+
+**Layer B — fuzzy.** Normalised Levenshtein at 0.85, for **single words and short names
+only**. Typing "Newspeek" for "Newspeak" is a spelling slip, not a wrong answer. It is
+never handed a sentence — `mark.js` enforces a six-word ceiling and warns if something
+tries.
+
+**Layer C — meaning.** A 23 MB MiniLM sentence-embedding model, bundled in the repo and
+run in your browser through WebAssembly. It compares your sentence to three to five model
+answers and to two or three deliberate near-misses, and returns one of three words:
+**nailed**, **circling**, **not yet** — then shows you the model answers either way.
+
+You will never see the underlying number. A cosine similarity is not a mark and dressing
+one up as a band would be the single most dishonest thing this app could do.
+
+Layer C is **opt-in**. It is not downloaded on first load; Settings offers it behind a
+button with the size stated. Skip it and the three sentence modes still run — they show
+model answers instead of marking yours, and they pay nothing. Because Layer C is a
+similarity threshold rather than an equality check, what it pays is capped, rate-limited
+to once per prompt per day, and blocked for a resubmitted answer.
+
+**Nothing leaves your device, ever.** No API key, no account, no backend, and no network
+request of any kind once the app has loaded. The model is checked into `models/minilm/`
+and the runtime into `vendor/transformers/` precisely so that promise does not depend on
+anyone's CDN staying up. `transformers.js` defaults to fetching weights from HuggingFace,
+which is disabled explicitly (`env.allowRemoteModels = false`) — the one configuration
+line in this app that matters most.
+
+## What's in it
+
+- **14 study modes** — Rapid Fire, Module Drill, Survival, Mistake Rehab, Technique Hunt,
+  Cloze Crunch, the Marking Desk, the Essay Architect, Quote Match, Band Grid, Question
+  Deconstruction, Say It In One, Thesis Forge, Rewrite Rescue
+- **5 module bosses** plus **The Final Paper**, each with a gimmick that attacks a
+  different habit — an editor who rewrites your answer, a critic who hides the labels
+- **The Quote Vault** — 277 quotes on a five-box Leitner schedule
+- **Reference screens** — 221 techniques, 12 rubric verbs, the band descriptors, module
+  concepts, essay architecture, per-text quote sheets
+- **The Draft Desk** — somewhere to write, with a word count, an exam clock and export to
+  a file. No XP, no Marks, no marking, no one reading over your shoulder
+- **The Arcade** — three games rented with Marks that pay **nothing but a high score**
+
+395 multiple-choice questions, each with a worked explanation. 60 band-tagged paragraphs.
+62 free-text prompts with model answers and near-misses. 14 essay puzzles, 42 topic
+sentence pairs, 79 achievements, 10 themes, 60 levels.
+
+Two things in this app earn nothing at all, and that is enforced structurally rather than
+promised in a comment: neither `js/core/arcade.js`, `js/games/arcade-*.js` nor
+`js/screens/draft.js` contains a call to `UI.award()`. An endless runner paying even 1 XP
+a second beats studying, and a "free" mode that pays is just the optimal strategy wearing
+a disguise.
+
+## Architecture
+
+```
+index.html            script tags in dependency order — this IS the build system
+sw.js                 precache the shell; never touches the model's cache bucket
+js/core/              util · mark · state · audio · fx · ui · bank · arcade
+js/data/              pure literals on EN.DATA; no behaviour, no dependencies
+js/data/texts/        one file per prescribed text
+js/games/             one file per mode
+js/screens/           one function per route
+js/app.js             routes, boot, service worker
+models/ vendor/       Layer C, vendored — never fetched
+tools/icons.js        run by hand to rasterise the icon; the app never touches it
+```
+
+One global (`window.EN`), hash routing, vanilla DOM through a single `el()` helper, and
+localStorage on a debounce with an explicit flush when the tab is backgrounded. Every
+reward in the app flows through one function, `UI.award()`, and every game gets its chrome
+from `UI.gameShell()` and registers its teardown with `UI.onLeave()`.
+
+If something looks stale after an update, **Settings → Force refresh** unregisters every
+service worker, deletes the shell caches and reloads clean. It keeps your save, and it
+keeps the downloaded model — re-charging somebody 23 MB of mobile data for a new
+stylesheet would be a punishment, not a fix.
+
+## Your save
+
+Everything lives in one localStorage key on your device. There is no account and nothing
+to sign into, which also means clearing site data deletes it — **export before switching
+phones** (Settings → Export save, which includes your drafts).
+
+## Licence
+
+The code is yours to use. The literary extracts are not — they are quoted for study under
+fair dealing and attributed to their composers.

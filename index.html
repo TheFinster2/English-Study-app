@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en-AU" data-theme="marginalia" data-motion="on">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover so the safe-area insets in the CSS actually have something to
+     read on a notched phone. The app is designed at 390px and checked at 360px. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Close Reading — HSC English Advanced</title>
+<meta name="description" content="A study app for HSC English Advanced. Techniques, quotes, band descriptors and sentence-level marking that runs entirely on your device. Works offline.">
+<meta name="theme-color" content="#161310">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Close Reading">
+<meta name="color-scheme" content="dark light">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- The boot screen is inline HTML rather than rendered, so it is visible before a single
+     script has parsed. It is removed in app.js once the data banks are up. -->
+<div class="boot" id="boot">
+  <div class="boot-mark">📖</div>
+  <div class="boot-title">Close Reading</div>
+  <div class="boot-sub" id="boot-sub">Sharpening the red pen…</div>
+</div>
+
+<canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+<header class="topbar" id="topbar">
+  <button class="avatar-btn" id="avatar-btn" title="Your reader" aria-label="Your reader">
+    <span class="avatar-ring" id="avatar-emoji">🖋️</span>
+  </button>
+  <div class="topbar-mid">
+    <div class="lvl-line">
+      <span class="lvl-badge" id="lvl-badge">Lv 1</span>
+      <span class="lvl-title" id="lvl-title">Margin Scribbler</span>
+      <span class="lvl-xp" id="lvl-xp">0 / 130 XP</span>
+    </div>
+    <div class="xpbar"><div class="xpbar-fill" id="xpbar-fill"></div></div>
+  </div>
+  <div class="topbar-right">
+    <button class="pill pill-streak" id="streak-pill" title="Day streak">
+      <span class="pill-icon">🔥</span><span id="streak-count">0</span>
+    </button>
+    <button class="pill" id="coin-pill" title="Marks — spend them in the Shop">
+      <span class="pill-icon">✒️</span><span id="coin-count">120</span>
+    </button>
+    <button class="icon-btn" id="settings-btn" title="Settings" aria-label="Settings">⚙️</button>
+  </div>
+</header>
+
+<main class="view" id="view" tabindex="-1"></main>
+
+<nav class="navbar" aria-label="Main">
+  <a class="nav-item on" data-nav="home" href="#/home"><span class="nav-ico">🏠</span>Home</a>
+  <a class="nav-item" data-nav="play" href="#/play"><span class="nav-ico">🎮</span>Play</a>
+  <a class="nav-item" data-nav="vault" href="#/vault"><span class="nav-ico">🗝️</span>Vault</a>
+  <a class="nav-item" data-nav="progress" href="#/progress"><span class="nav-ico">📈</span>Progress</a>
+  <a class="nav-item" data-nav="shop" href="#/shop"><span class="nav-ico">🛒</span>Shop</a>
+</nav>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="modal-root" id="modal-root" hidden></div>
+
+<!-- ==========================================================================
+     SCRIPT ORDER IS THE DEPENDENCY GRAPH.
+
+     No modules, no bundler, no build step. Classic <script> tags load and execute in
+     document order, which means this list is the whole of the app's dependency
+     management — and it works because every file is an IIFE that only *reads* other
+     namespaces from inside functions, never at parse time.
+
+     Four tiers, and nothing may reach upwards:
+       1. core primitives     (util → mark/state → audio/fx → ui → bank/arcade)
+       2. data                (pure literals on EN.DATA; no behaviour, no dependencies)
+       3. games               (read core + data)
+       4. screens, then app   (read everything; app.js registers routes and boots)
+
+     mark.js loads before state.js only because state.js reads Mark.FUZZY_THRESHOLD in a
+     comment-level assertion; ui.js must come after state.js and audio.js because it
+     calls both. bank.js comes after the data tier is *declared* but it discovers banks
+     lazily, so it can sit here.
+     ========================================================================== -->
+
+<!-- 1. core -->
+<script src="js/core/util.js"></script>
+<script src="js/core/mark.js"></script>
+<script src="js/core/state.js"></script>
+<script src="js/core/audio.js"></script>
+<script src="js/core/fx.js"></script>
+<script src="js/core/ui.js"></script>
+
+<!-- 2. data — reference first, then texts, then the banks that tag against them -->
+<script src="js/data/meta.js"></script>
+<script src="js/data/techniques.js"></script>
+<script src="js/data/rubric.js"></script>
+<script src="js/data/concepts.js"></script>
+<script src="js/data/texts.js"></script>
+<script src="js/data/texts/nineteen-eighty-four.js"></script>
+<script src="js/data/texts/donne.js"></script>
+<script src="js/data/texts/wit.js"></script>
+<script src="js/data/texts/henry-iv.js"></script>
+<script src="js/data/texts/craft.js"></script>
+<script src="js/data/texts/the-crucible.js"></script>
+<script src="js/data/texts/hamlet.js"></script>
+<script src="js/data/texts/the-tempest.js"></script>
+<script src="js/data/texts/hag-seed.js"></script>
+<script src="js/data/questions-common.js"></script>
+<script src="js/data/questions-modulea.js"></script>
+<script src="js/data/questions-moduleb.js"></script>
+<script src="js/data/questions-modulec.js"></script>
+<script src="js/data/questions-core.js"></script>
+<script src="js/data/questions-starters.js"></script>
+<script src="js/data/paragraphs.js"></script>
+<script src="js/data/freetext.js"></script>
+<script src="js/data/essays.js"></script>
+<script src="js/data/shop.js"></script>
+<script src="js/data/achievements.js"></script>
+
+<!-- bank.js discovers the data above by pattern, so it loads after it -->
+<script src="js/core/bank.js"></script>
+<script src="js/core/arcade.js"></script>
+
+<!-- 3. games -->
+<script src="js/games/quiz.js"></script>
+<script src="js/games/technique.js"></script>
+<script src="js/games/cloze.js"></script>
+<script src="js/games/markingdesk.js"></script>
+<script src="js/games/essayarch.js"></script>
+<script src="js/games/layerc.js"></script>
+<script src="js/games/quotematch.js"></script>
+<script src="js/games/bandgrid.js"></script>
+<script src="js/games/deconstruct.js"></script>
+<script src="js/games/boss.js"></script>
+<script src="js/games/arcade-lettercrush.js"></script>
+<script src="js/games/arcade-runner.js"></script>
+<script src="js/games/arcade-wordtower.js"></script>
+
+<!-- 4. screens, then boot -->
+<script src="js/screens/home.js"></script>
+<script src="js/screens/play.js"></script>
+<script src="js/screens/vault.js"></script>
+<script src="js/screens/reference.js"></script>
+<script src="js/screens/progress.js"></script>
+<script src="js/screens/shop.js"></script>
+<script src="js/screens/draft.js"></script>
+<script src="js/screens/misc.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

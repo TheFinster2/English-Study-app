@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Close Reading">
+  <!-- An open book with one line circled in red pen. Drawn rather than an emoji so the
+       maskable variant has real bleed at the edges and the mark stays legible at 48px. -->
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6f1e2"/>
+      <stop offset="1" stop-color="#ddd3bb"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e1a16"/>
+      <stop offset="1" stop-color="#100e0c"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- spine shadow -->
+  <path d="M256 132c0 0-6 14-6 32v212c0 18 6 30 6 30s6-12 6-30V164c0-18-6-32-6-32z" fill="#0c0a08" opacity=".6"/>
+
+  <!-- left leaf -->
+  <path d="M96 148c48-18 108-22 152 0v226c-44-20-104-16-152 2z" fill="url(#paper)"/>
+  <!-- right leaf -->
+  <path d="M416 148c-48-18-108-22-152 0v226c44-20 104-16 152 2z" fill="url(#paper)"/>
+
+  <!-- ruled lines, left -->
+  <g stroke="#9c917c" stroke-width="8" stroke-linecap="round" opacity=".55">
+    <path d="M128 196h88"/><path d="M128 232h88"/><path d="M128 268h72"/>
+    <path d="M128 304h88"/><path d="M128 340h60"/>
+  </g>
+  <!-- ruled lines, right -->
+  <g stroke="#9c917c" stroke-width="8" stroke-linecap="round" opacity=".55">
+    <path d="M296 196h88"/><path d="M296 268h88"/><path d="M296 304h72"/><path d="M296 340h88"/>
+  </g>
+
+  <!-- the annotation: one line circled and underlined in red pen -->
+  <ellipse cx="340" cy="232" rx="60" ry="26" fill="none" stroke="#e0574a" stroke-width="11"
+           stroke-linecap="round" transform="rotate(-3 340 232)"/>
+  <path d="M292 232h92" stroke="#e0574a" stroke-width="9" stroke-linecap="round" opacity=".9"/>
+  <path d="M404 214c14-10 22-4 18 8" stroke="#e0574a" stroke-width="9" stroke-linecap="round" fill="none"/>
+</svg>
