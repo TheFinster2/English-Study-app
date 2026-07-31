@@ -178,7 +178,19 @@ EN.Games.quiz = (function () {
 
     let card = null;
 
-    if (c.totalTime) {
+    /* ── the clock, which STOPS while you are reading ──────────
+       This was the "I submitted an answer and just got kicked" bug. The clock ran
+       continuously, including through the feedback panel — so a student reading the
+       worked explanation of the answer they had just given could have the run end
+       underneath them and be dropped into the results modal mid-sentence. It reads as
+       the app throwing you out, because that is what it does.
+
+       The clock measures how long you take to ANSWER. Reading why is not what is being
+       tested — the same principle as UI.readTimeFor (§9.5), pointed the other way. So it
+       pauses on submit and resumes on Next, which also removes the incentive to skip the
+       explanation to save time, which was the worst part of the old behaviour. */
+    function startClock() {
+      if (!c.totalTime || timerId || finished) return;
       timerId = setInterval(() => {
         timeLeft--;
         timerChip.textContent = U.fmtTime(Math.max(0, timeLeft));
@@ -188,6 +200,17 @@ EN.Games.quiz = (function () {
         if (timeLeft <= 0) { EN.Sound.timeout(); finish("Time"); }
       }, 1000);
     }
+    function pauseClock() {
+      if (!timerId) return;
+      clearInterval(timerId);
+      timerId = null;
+      if (timerChip) timerChip.classList.add("paused");
+    }
+    function resumeClock() {
+      if (timerChip) timerChip.classList.remove("paused");
+      startClock();
+    }
+    startClock();
     UI.onLeave(() => { clearInterval(timerId); document.removeEventListener("keydown", onKey); });
     document.addEventListener("keydown", onKey);
 
@@ -264,6 +287,9 @@ EN.Games.quiz = (function () {
       scoreChip.textContent = Math.max(0, xpEarned - penalty) + " XP";
       streakChip.textContent = "Streak " + streak;
 
+      /* Answered — stop the clock before the feedback panel goes up. */
+      pauseClock();
+
       const isLast = !c.totalTime && idx >= questions.length - 1;
       const outOfLives = c.lives && lives <= 0;
       const nextBtn = U.el("button", {
@@ -277,6 +303,7 @@ EN.Games.quiz = (function () {
             questions.push(...EN.Bank.draw(10, { mods: c.mods, texts: c.texts, topics: c.topics, adaptive: c.adaptive }));
           }
           EN.Sound.page();
+          resumeClock();
           renderQuestion();
         } }
       });
@@ -322,6 +349,7 @@ EN.Games.quiz = (function () {
           UI.toast({ icon: "⏭️", text: "Skipped — streak preserved." });
           idx++;
           if (idx >= questions.length) return finish();
+          resumeClock();
           renderQuestion();
           return;
         }

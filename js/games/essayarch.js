@@ -92,10 +92,16 @@ EN.Games.essay = (function () {
 
       stage.appendChild(head);
       stage.appendChild(track);
-      stage.appendChild(U.el("h2", { text: "Cards" }));
+      const poolHead = U.el("h2", { class: "ea-pool-head", text: "Cards" });
+      stage.appendChild(poolHead);
       stage.appendChild(pool);
 
-      const controls = U.el("div", { class: "row", style: "margin-top:12px" });
+      /* Sticky, because it was not reachable. Placing the last card is the moment the
+         student needs this button, and that is exactly the moment the page is at its
+         longest — track full, pool still rendered — so "Check the order" sat below the
+         fold behind the nav bar with nothing on screen suggesting it existed. It now pins
+         above the nav bar whenever the puzzle is complete. */
+      const controls = U.el("div", { class: "row ea-actions", style: "margin-top:12px" });
       const resetBtn = U.el("button", { class: "btn btn-ghost btn-sm", text: "↺ Reset this puzzle" });
       const submitBtn = U.el("button", { class: "btn btn-primary", text: "Check the order", disabled: true });
       controls.appendChild(resetBtn);
@@ -121,7 +127,12 @@ EN.Games.essay = (function () {
         }
         placed.forEach((di, slot) => {
           const d = dealt[di];
-          const row = U.el("div", { class: "ea-slot" }, [
+          /* The grade is rendered HERE rather than stamped on afterwards. It used to be
+             applied to the rows and then drawTrack() was called, which starts by emptying
+             the track — so the classes were wiped in the same tick and the student clicked
+             "Check the order" and watched nothing happen. */
+          const grade = !done ? "" : d.correct === slot ? " right" : " wrongslot";
+          const row = U.el("div", { class: "ea-slot" + grade }, [
             U.el("div", { class: "ea-slot-role", text: roleName(d.card.role) }),
             U.el("div", { class: "ea-slot-text", text: d.card.text }),
             done ? null : U.el("button", { class: "ea-slot-x", type: "button", text: "✕",
@@ -130,7 +141,14 @@ EN.Games.essay = (function () {
           ]);
           track.appendChild(row);
         });
-        submitBtn.disabled = placed.length !== dealt.length || done;
+        const ready = placed.length === dealt.length && !done;
+        submitBtn.disabled = !ready;
+        controls.classList.toggle("stuck", ready);
+        /* The pool collapses as it empties rather than holding a column of greyed-out
+           cards, which is what pushed the button off screen in the first place. */
+        const spent = placed.length === dealt.length;
+        pool.classList.toggle("spent", spent);
+        poolHead.classList.toggle("spent", spent);
       }
 
       function place(i) {
@@ -178,13 +196,12 @@ EN.Games.essay = (function () {
         resetBtn.disabled = true;
 
         let rightPlaces = 0;
-        Array.from(track.children).forEach((row, slot) => {
-          const d = dealt[placed[slot]];
-          if (d.correct === slot) { row.classList.add("right"); rightPlaces++; }
-          else { row.classList.add("wrongslot"); wasted++; }
+        placed.forEach((di, slot) => {
+          if (dealt[di].correct === slot) rightPlaces++;
+          else wasted++;
         });
         const allRight = rightPlaces === dealt.length;
-        drawTrack();
+        drawTrack();   // `done` is true now, so this is the pass that paints the grade
 
         const spent = Math.max(ideal, movesSpent());
         const efficiency = Math.min(1, ideal / spent);

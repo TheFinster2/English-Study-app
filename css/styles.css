@@ -919,3 +919,25 @@ ul.tight li{ font-size:13px; line-height:1.6; color:var(--ink-dim); margin-botto
 .lc-crit.part .lc-crit-mark{ color:var(--warn); }
 .lc-crit-body{ flex:1; min-width:0; font-size:13px; }
 .lc-crit-body b{ font-size:13px; }
+
+/* The Essay Architect's action bar. See the comment in essayarch.js: the submit button
+   became unreachable at exactly the moment it was needed, because placing the last card
+   is when the page is longest. `stuck` is applied only while the puzzle is complete, so
+   the bar does not hover over the board for the whole puzzle. */
+.ea-actions.stuck{
+  position:sticky; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 78px);
+  z-index:68; padding:10px 12px; margin-top:14px;
+  border-radius:16px; border:1px solid var(--line);
+  background:color-mix(in srgb,var(--bg-1) 92%,transparent);
+  backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+.ea-actions.stuck .btn-primary{ box-shadow:0 0 18px color-mix(in srgb,var(--accent) 35%,transparent); }
+/* Every card placed: the empty pool stops taking up a screen of greyed-out buttons. */
+.ea-pool.spent{ display:none; }
+h2.ea-pool-head.spent{ display:none; }
+
+/* The clock stops while the feedback panel is up — see the comment in quiz.js. Shown, not
+   silent: a timer that has stopped without saying so looks like a timer that has broken. */
+.timer-ring.paused{ opacity:.55; border-style:dashed; animation:none; }
+.timer-ring.paused::after{ content:" ⏸"; font-size:10px; }

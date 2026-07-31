@@ -211,11 +211,25 @@ EN.Games.layerc = (function () {
            gives the Detail mark rather than penalising a criterion the data cannot
            express, so passing them is what makes the mark meaningful. */
         const q = p.quote ? EN.Bank.quoteById(p.quote) : null;
-        const res = await EN.Mark.check(ta.value, {
-          layer: "C", answers: p.answers, nearMiss,
-          prompt: p.prompt, threshold: p.threshold, domain: p.domain,
-          text: p.text, techniques: q ? q.techniques : null, quoteText: q ? q.text : null
-        });
+        /* The only await in any game, so the only place a rejection can strand the
+           student: the textarea is already disabled and the submit button already says
+           "Marking…", so a throw here leaves a screen with no way forward and nothing
+           said — which is indistinguishable from the app dying. "unavailable" is a
+           first-class verdict precisely so there is something honest to fall back to. */
+        let res;
+        try {
+          res = await EN.Mark.check(ta.value, {
+            layer: "C", answers: p.answers, nearMiss,
+            prompt: p.prompt, threshold: p.threshold, domain: p.domain,
+            text: p.text, techniques: q ? q.techniques : null, quoteText: q ? q.text : null
+          });
+        } catch (err) {
+          console.warn("Marking threw; falling back to unavailable.", err);
+          res = { verdict: "unavailable", score: 0, layer: "C", flags: ["threw"],
+                  total: 0, outOf: 4, exemplars: p.answers,
+                  feedback: "Something went wrong marking that, so it has not been scored. Your answer is intact above and the model answers are below." };
+        }
+        if (!res.flags) res.flags = [];
 
         submit.remove();
         S.bump("sentencesMarked");
