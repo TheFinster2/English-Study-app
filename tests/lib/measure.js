@@ -28,7 +28,9 @@ function dataFiles(root) {
     .map(f => "js/data/texts/" + f);
   const top = fs.readdirSync(dir).filter(f => f.endsWith(".js")).sort().map(f => "js/data/" + f);
   // meta/texts manifest first so the text files have somewhere to register.
-  const order = ["js/data/meta.js", "js/data/texts.js"];
+  /* util.js first — it is not data, but the suites need U.words and U.normalise to check
+     the data, and loading it here keeps every suite from having to know that. */
+  const order = ["js/core/util.js", "js/data/meta.js", "js/data/texts.js"];
   return order
     .concat(texts)
     .concat(top.filter(f => !order.includes(f)));
@@ -44,3 +46,32 @@ function allQuestions(EN) {
 }
 
 module.exports = { loadData, dataFiles, allQuestions };
+
+/**
+ * State.achievementStats() on a brand-new save.
+ *
+ * Loading state.js needs a localStorage that does nothing, which is exactly what we want:
+ * a fresh save with no history. Derived from the app rather than hand-written, so the
+ * reachability check in validate.js cannot quietly stop covering new statistics.
+ */
+function freshStats(root) {
+  const store = new Map();
+  const ctx = { console };
+  ctx.window = ctx; ctx.self = ctx;
+  ctx.location = { protocol: "http:", href: "http://x/", hash: "" };
+  ctx.document = { baseURI: "http://x/", addEventListener() {} };
+  ctx.localStorage = {
+    getItem: k => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: k => store.delete(k)
+  };
+  ctx.setTimeout = setTimeout; ctx.clearTimeout = clearTimeout;
+  vm.createContext(ctx);
+  for (const f of ["js/core/util.js", "js/data/meta.js", "js/core/mark.js", "js/core/state.js"]) {
+    vm.runInContext(fs.readFileSync(path.join(root, f), "utf8"), ctx, { filename: f });
+  }
+  ctx.EN.State.load();
+  return ctx.EN.State.achievementStats();
+}
+
+module.exports.freshStats = freshStats;

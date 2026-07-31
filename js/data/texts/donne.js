@@ -554,13 +554,13 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q52", text:"Why doth the devil then usurp on me? / Why doth he steal, nay ravish that's thy right?",
       locus:"Holy Sonnet 2, ll. 9–10", poem:"hs2", speaker:"speaker", mark:"usurp on me",
-      techniques:["rhetorical-question","legal-diction","anaphora","sexual-violence"],
+      techniques:["rhetorical-question","legal-diction","anaphora","violence-imagery"],
       effect:"The complaint is put to God as a landlord whose tenant is being robbed. 'Ravish' imports sexual violence into the property claim, which is the same collision Holy Sonnet 14 runs on.",
       concepts:["faith","salvation","suffering"] },
 
     { id:"donne-q53", text:"O might those sighs and tears return again / Into my breast and eyes, which I have spent,",
       locus:"Holy Sonnet 3, ll. 1–2", poem:"hs3", speaker:"speaker", mark:"return again / Into my breast",
-      techniques:["apostrophe","subjunctive","economic-diction","enjambment"],
+      techniques:["apostrophe","subjunctive","commercial-diction","enjambment"],
       effect:"Grief is treated as expenditure that could be recalled and re-spent on a better object. Wasting sorrow on love rather than on sin is framed as a book-keeping error.",
       concepts:["repentance","desire","faith"] },
 
@@ -572,13 +572,13 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q55", text:"Burn me, O Lord, with a fiery zeal / Of thee and thy house, which doth in eating heal.",
       locus:"Holy Sonnet 5, ll. 13–14", poem:"hs5", speaker:"speaker", mark:"in eating heal",
-      techniques:["paradox","imperative","oxymoron","fire-imagery","couplet"],
+      techniques:["paradox","imperative","oxymoron","religious-diction","heroic-couplet"],
       effect:"The closing paradox asks for a fire that consumes and cures in the same motion. Donne's God is repeatedly requested to do violence, because gentleness is presented as insufficient.",
       concepts:["faith","salvation","suffering"] },
 
     { id:"donne-q56", text:"If faithful souls be alike glorified / As angels, then my father's soul doth see",
       locus:"Holy Sonnet 8, ll. 1–2", poem:"hs8", speaker:"speaker", mark:"If faithful souls be alike glorified",
-      techniques:["conditional","syllogism","enjambment","theological-diction"],
+      techniques:["conditional","syllogism","enjambment","religious-diction"],
       effect:"A hypothesis about the afterlife is set up in order to reach a private anxiety: whether the dead can see him. The logical frame is genuine and the motive is grief.",
       concepts:["mortality","faith","grief"] },
 
@@ -590,7 +590,7 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q58", text:"They kill'd once an inglorious man, but I / Crucify him daily, being now glorified.",
       locus:"Holy Sonnet 11, ll. 7–8", poem:"hs11", speaker:"speaker", mark:"Crucify him daily",
-      techniques:["antithesis","present-tense","paradox","enjambment"],
+      techniques:["antithesis","tense-shift","paradox","enjambment"],
       effect:"The volta relocates the guilt from the historical crowd to the speaker's ongoing sin. Shifting from a single past act to a daily present one is what makes the poem an accusation rather than a report.",
       concepts:["faith","repentance","suffering"] },
 
@@ -614,7 +614,7 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q62", text:"Since she whom I loved hath paid her last debt / To nature, and to hers, and my good is dead,",
       locus:"Holy Sonnet 17, ll. 1–2", poem:"hs17", speaker:"speaker", mark:"paid her last debt / To nature",
-      techniques:["euphemism","economic-diction","enjambment","caesura","elegy"],
+      techniques:["euphemism","commercial-diction","enjambment","caesura","elegy"],
       effect:"Death is stated as a settled account, and the flatness is the grief. Written after his wife's death, the sonnet reaches for the same commercial vocabulary as the love poems and finds it will not console.",
       concepts:["mortality","grief","faith"] },
 
@@ -645,25 +645,25 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q67", text:"For love, all love of other sights controls, / And makes one little room an everywhere.",
       locus:"The Good-Morrow, ll. 10–11", poem:"good-morrow", speaker:"speaker", mark:"one little room an everywhere",
-      techniques:["hyperbole","paradox","microcosm","noun-from-adverb"],
+      techniques:["hyperbole","paradox","microcosm","nominalisation"],
       effect:"Making 'everywhere' into a noun is the grammatical version of the claim: the lovers' room replaces the world. Donne's compression of scale is done at the level of the word class, not the image.",
       concepts:["desire","wit","transcendence"] },
 
     { id:"donne-q68", text:"Now thou hast loved me one whole day, / Tomorrow when thou leav'st, what wilt thou say?",
       locus:"Woman's Constancy, ll. 1–2", poem:"womans-constancy", speaker:"speaker", mark:"one whole day",
-      techniques:["irony","rhetorical-question","hyperbole","couplet"],
+      techniques:["irony","rhetorical-question","hyperbole","heroic-couplet"],
       effect:"'One whole day' is sarcasm doing the work of an argument. The poem spends fourteen lines anticipating her excuses and then admits he would use them all himself.",
       concepts:["desire","wit","persuasion"] },
 
     { id:"donne-q69", text:"I can love both fair and brown, / Her whom abundance melts, and her whom want betrays,",
       locus:"The Indifferent, ll. 1–2", poem:"indifferent", speaker:"speaker", mark:"both fair and brown",
-      techniques:["catalogue","antithesis","parallelism","libertine-persona"],
+      techniques:["listing","antithesis","parallelism","persona"],
       effect:"A catalogue of women arranged as a list of logical categories. The joke is the form: promiscuity presented with the rigour of a scholastic division.",
       concepts:["desire","wit","persuasion"] },
 
     { id:"donne-q70", text:"If yet I have not all thy love, / Dear, I shall never have it all;",
       locus:"Lovers' Infiniteness, ll. 1–2", poem:"lovers-infiniteness", speaker:"speaker", mark:"never have it all",
-      techniques:["conditional","paradox","economic-diction","enjambment"],
+      techniques:["conditional","paradox","commercial-diction","enjambment"],
       effect:"Love is audited for completeness and found to be uncountable, which the poem treats as a problem to be solved rather than a comfort. The closing move is to propose exchanging hearts entirely.",
       concepts:["desire","wit","transcendence"] },
 
@@ -687,43 +687,43 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q74", text:"Oh do not die, for I shall hate / All women so, when thou art gone,",
       locus:"A Fever, ll. 1–2", poem:"fever", speaker:"speaker", mark:"for I shall hate / All women so",
-      techniques:["imperative","hyperbole","egotism","enjambment"],
+      techniques:["imperative","hyperbole","tone","enjambment"],
       effect:"He forbids her death and gives his own inconvenience as the reason. Donne's love poems routinely make the speaker's argument the centre of a scene about someone else's body.",
       concepts:["desire","mortality","wit"] },
 
     { id:"donne-q75", text:"Twice or thrice had I loved thee, / Before I knew thy face or name;",
       locus:"Air and Angels, ll. 1–2", poem:"air-and-angels", speaker:"speaker", mark:"Before I knew thy face or name",
-      techniques:["neoplatonism","paradox","enumeration","enjambment"],
+      techniques:["neoplatonism","paradox","listing","enjambment"],
       effect:"Loving before knowing sets up the poem's problem: love needs a body to inhabit or it stays abstract. The angel-and-air conceit is then the proposed solution.",
       concepts:["desire","transcendence","wit"] },
 
     { id:"donne-q76", text:"All kings, and all their favourites, / All glory of honours, beauties, wits, / The sun itself, which makes times, as they pass, / Is elder by a year now than it was",
       locus:"The Anniversary, ll. 1–4", poem:"anniversary", speaker:"speaker", mark:"Is elder by a year now than it was",
-      techniques:["anaphora","catalogue","antithesis","hyperbole"],
+      techniques:["anaphora","listing","antithesis","hyperbole"],
       effect:"Everything in the world is dated by a year in four lines so that the lovers alone can be exempted in the fifth. The catalogue exists to be overturned.",
       concepts:["desire","mortality","transcendence"] },
 
     { id:"donne-q77", text:"Let me pour forth / My tears before thy face, whilst I stay here,",
       locus:"A Valediction: Of Weeping, ll. 1–2", poem:"valediction-weeping", speaker:"speaker", mark:"pour forth / My tears",
-      techniques:["conceit","imperative","enjambment","liquid-imagery"],
+      techniques:["conceit","imperative","enjambment","physical-imagery"],
       effect:"Tears become coins, then globes, then a flood that could drown him. The conceit escalates through three stages, which is how Donne builds an argument out of one image.",
       concepts:["desire","grief","wit"] },
 
     { id:"donne-q78", text:"Some that have deeper digg'd love's mine than I, / Say, where his centric happiness doth lie:",
       locus:"Love's Alchemy, ll. 1–2", poem:"loves-alchemy", speaker:"speaker", mark:"deeper digg'd love's mine",
-      techniques:["conceit","alchemical-diction","irony","enjambment"],
+      techniques:["conceit","technical-diction","irony","enjambment"],
       effect:"Alchemy supplies the poem's vocabulary in order to be debunked: the promised elixir of love turns out not to exist. Donne uses a pseudo-science to argue that an idealism is fraudulent.",
       concepts:["desire","wit","disillusion"] },
 
     { id:"donne-q79", text:"'Tis the year's midnight, and it is the day's, / Lucy's, who scarce seven hours herself unmasks;",
       locus:"A Nocturnal upon St Lucy's Day, ll. 1–2", poem:"nocturnal", speaker:"speaker", mark:"the year's midnight",
-      techniques:["metaphor","paradox","seasonal-imagery","caesura"],
+      techniques:["metaphor","paradox","imagery","caesura"],
       effect:"The shortest day is made into a midnight of the whole year, and the speaker then claims to be emptier still. This is Donne's one poem where the wit does not rescue the speaker.",
       concepts:["grief","mortality","transcendence"] },
 
     { id:"donne-q80", text:"I am every dead thing, / In whom love wrought new alchemy.",
       locus:"A Nocturnal upon St Lucy's Day, ll. 12–13", poem:"nocturnal", speaker:"speaker", mark:"every dead thing",
-      techniques:["hyperbole","metaphor","alchemical-diction","enjambment"],
+      techniques:["hyperbole","metaphor","technical-diction","enjambment"],
       effect:"Absolute negation stated as a fact about the self, not a feeling about it. Where the other poems argue their way out of loss, this one accepts the arithmetic and stops.",
       concepts:["grief","mortality","suffering"] },
 
@@ -735,7 +735,7 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q82", text:"Where, like a pillow on a bed, / A pregnant bank swell'd up to rest / The violet's reclining head,",
       locus:"The Ecstasy, ll. 1–3", poem:"ecstasy", speaker:"speaker", mark:"A pregnant bank swell'd up",
-      techniques:["simile","personification","sexual-suggestion","enjambment"],
+      techniques:["simile","personification","erotic-diction","enjambment"],
       effect:"The landscape is described in the vocabulary of a bed before any person is mentioned. The poem's whole argument — that souls need bodies — is pre-empted by the setting.",
       concepts:["desire","transcendence","wit"] },
 
@@ -753,7 +753,7 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q85", text:"Little think'st thou, poor flower, / Whom I have watch'd six or seven days,",
       locus:"The Blossom, ll. 1–2", poem:"blossom", speaker:"speaker", mark:"Little think'st thou, poor flower",
-      techniques:["apostrophe","personification","condescension","enjambment"],
+      techniques:["apostrophe","personification","tone","enjambment"],
       effect:"Addressing a flower lets the speaker rehearse a lecture aimed at his own heart. Donne's apostrophes are almost always a way of talking to himself with an audience present.",
       concepts:["desire","wit","mortality"] },
 
@@ -765,7 +765,7 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q87", text:"So, so, break off this last lamenting kiss, / Which sucks two souls, and vapours both away;",
       locus:"The Expiration, ll. 1–2", poem:"expiration", speaker:"speaker", mark:"sucks two souls, and vapours both away",
-      techniques:["repetition","conceit","monosyllables","alchemical-diction"],
+      techniques:["repetition","conceit","monosyllables","technical-diction"],
       effect:"The doubled 'So, so' enacts the parting before the sentence explains it. A kiss is made an evaporation, so the leaving is a physical process rather than a decision.",
       concepts:["desire","mortality","grief"] },
 
@@ -778,7 +778,7 @@ EN.DATA.texts["donne"] = {
     /* Elegies, Divine Poems, prose */
     { id:"donne-q89", text:"By our first strange and fatal interview, / By all desires which thereof did ensue,",
       locus:"Elegy 16: On His Mistress, ll. 1–2", poem:"elegy-16", speaker:"speaker", mark:"first strange and fatal interview",
-      techniques:["anaphora","oath-formula","alliteration","couplet"],
+      techniques:["anaphora","oath-formula","alliteration","heroic-couplet"],
       effect:"A chain of 'By…' oaths builds pressure before the request arrives, which is the rhetoric of a legal deposition applied to a lover. 'Fatal' is planted in line one and paid off in the poem's fear of her death.",
       concepts:["desire","mortality","persuasion"] },
 
@@ -796,37 +796,37 @@ EN.DATA.texts["donne"] = {
 
     { id:"donne-q92", text:"Let man's soul be a sphere, and then, in this, / The intelligence that moves, devotion is,",
       locus:"Good Friday, 1613. Riding Westward, ll. 1–2", poem:"good-friday", speaker:"speaker", mark:"Let man's soul be a sphere",
-      techniques:["conceit","cosmology","imperative","enjambment"],
+      techniques:["conceit","cosmological-imagery","imperative","enjambment"],
       effect:"Ptolemaic astronomy is proposed as a model for the soul, and the poem's guilt then becomes a matter of direction: he is riding west while the Crucifixion is east. Geography is made theology.",
       concepts:["faith","repentance","wit"] },
 
     { id:"donne-q93", text:"In what torn ship soever I embark, / That ship shall be my emblem of thy ark;",
       locus:"A Hymn to Christ, at the Author's Last Going into Germany, ll. 1–2", poem:"hymn-christ", speaker:"speaker", mark:"my emblem of thy ark",
-      techniques:["conceit","allusion","couplet","typology"],
+      techniques:["conceit","allusion","heroic-couplet","typology"],
       effect:"A leaking ship is read as a figure of salvation rather than a danger, which is typological reading applied to the speaker's own journey. Donne habitually makes his circumstances into scripture.",
       concepts:["faith","mortality","transcendence"] },
 
     { id:"donne-q94", text:"Kind pity chokes my spleen; brave scorn forbids / Those tears to issue which swell my eyelids;",
       locus:"Satire 3: On Religion, ll. 1–2", poem:"satire-3", speaker:"speaker", mark:"Kind pity chokes my spleen",
-      techniques:["antithesis","personification","caesura","couplet"],
+      techniques:["antithesis","personification","caesura","heroic-couplet"],
       effect:"Two contrary emotions cancel each other in the opening line, which is how the satire earns its standing to judge every church impartially. The deadlock is a rhetorical position.",
       concepts:["faith","wit","suffering"] },
 
     { id:"donne-q95", text:"Seek true religion. O where?",
       locus:"Satire 3: On Religion, l. 43", poem:"satire-3", speaker:"speaker", mark:"O where?",
-      techniques:["imperative","rhetorical-question","caesura","brevity"],
+      techniques:["imperative","rhetorical-question","caesura","monosyllables"],
       effect:"An instruction and its own objection in five words. The abruptness is the argument: the search is commanded before any church has been shown to deserve it.",
       concepts:["faith","wit","salvation"] },
 
     { id:"donne-q96", text:"Any man's death diminishes me, because I am involved in mankind.",
       locus:"Devotions upon Emergent Occasions, Meditation XVII", poem:"devotions", speaker:"Donne", mark:"I am involved in mankind",
-      techniques:["aphorism","first-person","cause-and-effect","prose-rhythm"],
+      techniques:["aphorism","first-person","syllogism","prose-rhythm"],
       effect:"The argument moves from a general claim to a personal cost in one clause, which is why the sentence has survived out of context. It is the Common-Module reading of Donne: individual experience is inseparable from collective.",
       concepts:["mortality","collective-experience","faith"] },
 
     { id:"donne-q97", text:"And therefore never send to know for whom the bell tolls; it tolls for thee.",
       locus:"Devotions upon Emergent Occasions, Meditation XVII", poem:"devotions", speaker:"Donne", mark:"it tolls for thee",
-      techniques:["direct-address","imperative","symbol","cadence"],
+      techniques:["direct-address","imperative","symbolism","prose-rhythm"],
       effect:"The funeral bell is reassigned to the listener mid-sentence. The whole meditation exists to make that pronoun swap land, which is why it reads as a conclusion rather than an image.",
       concepts:["mortality","collective-experience","faith"] }
   ]

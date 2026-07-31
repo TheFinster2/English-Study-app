@@ -977,3 +977,15 @@ h2.ea-pool-head.spent{ display:none; }
   border-left:3px solid var(--bad); background:color-mix(in srgb,var(--bad) 9%,transparent); }
 .party-claim-text{ font-style:italic; font-size:13.5px; margin-top:3px;
   text-decoration:line-through; text-decoration-color:color-mix(in srgb,var(--bad) 70%,transparent); }
+
+/* The Band Grid's submit. Eight rows and a five-column header are taller than a phone, so
+   this measured at y=874 in an 844px viewport. Fourth mode with the same bug; the pattern
+   is now shared by .ea-actions, .md-actions, .lc-actions and this. */
+.bg-actions{ margin-top:14px; }
+.bg-actions.stuck{
+  position:sticky; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 78px);
+  z-index:68; padding:10px 12px; border-radius:16px; border:1px solid var(--line);
+  background:color-mix(in srgb,var(--bg-1) 92%,transparent);
+  backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}

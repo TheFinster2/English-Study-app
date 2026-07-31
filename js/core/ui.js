@@ -430,7 +430,7 @@ EN.UI = (function () {
       ["XP", "+" + o.xp]
     ].concat(o.extraStats || []);
 
-    const box = U.el("div", { class: "modal-center" }, [
+    const box = U.el("div", { class: "modal-center results-modal" }, [
       U.el("div", { class: "modal-big " + r.cls, text: r.rank }),
       U.el("h2", { text: o.title || "Run complete", style: "justify-content:center" }),
       U.el("p", { text: r.blurb }),

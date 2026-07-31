@@ -103,7 +103,7 @@ EN.Games.essay = (function () {
          above the nav bar whenever the puzzle is complete. */
       const controls = U.el("div", { class: "row ea-actions", style: "margin-top:12px" });
       const resetBtn = U.el("button", { class: "btn btn-ghost btn-sm", text: "↺ Reset this puzzle" });
-      const submitBtn = U.el("button", { class: "btn btn-primary", text: "Check the order", disabled: true });
+      const submitBtn = U.el("button", { class: "btn btn-primary js-submit", text: "Check the order", disabled: true });
       controls.appendChild(resetBtn);
       controls.appendChild(U.el("div", { class: "spacer" }));
       controls.appendChild(submitBtn);

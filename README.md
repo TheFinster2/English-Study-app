@@ -42,20 +42,20 @@ works without configuration.
 
 ## Choosing your texts
 
-Open `js/data/texts.js` and edit one object:
+**In the app**: Settings → Your texts, or the Change button on the home screen. Pick one
+text per module (two for Module A, which is a pair). Everything downstream keys off this —
+which questions are drawn, which quotes enter the Vault, which paragraphs the Marking Desk
+shows, which texts get their own mastery bar.
 
-```js
-EN.DATA.activeTexts = {
-  common:  "1984",
-  moduleA: ["donne", "wit"],
-  moduleB: "henry4",
-  moduleC: "craft"
-};
-```
+Donne gets a second level, because he is not one text but a selection of **54 poems** and no
+two courses cut them the same way. Every poem can be switched on and off individually
+(Settings → Your texts → Poems), with group and preset shortcuts. A fresh install enables
+the twelve commonly-set ones rather than all 54, so the Vault does not open onto quotes from
+poems you have never been given.
 
-Everything downstream keys off this — which questions are drawn, which quotes enter the
-Vault, which paragraphs the Marking Desk shows, which texts get their own mastery bar.
-Text ids come from the files in `js/data/texts/`. The repo ships:
+`js/data/texts.js` still holds the **default** for a fresh install if you would rather edit
+a file; `State.activeTexts()` merges your in-app choice over it, and that is what the app
+reads. The repo ships:
 
 | Module | Texts included |
 | --- | --- |
@@ -85,11 +85,23 @@ tries.
 
 **Layer C — meaning.** A 23 MB MiniLM sentence-embedding model, bundled in the repo and
 run in your browser through WebAssembly. It compares your sentence to three to five model
-answers and to two or three deliberate near-misses, and returns one of three words:
-**nailed**, **circling**, **not yet** — then shows you the model answers either way.
+answers and to two or three deliberate near-misses.
 
-You will never see the underlying number. A cosine similarity is not a mark and dressing
-one up as a band would be the single most dishonest thing this app could do.
+The result is a **mark out of four**, from named criteria — and three of the four marks are
+deterministic, so when you lose one the app can say which criterion and why:
+
+| | | |
+| --- | --- | --- |
+| **Point** | 0–2 | does it answer the question? *(the embedding — the only fuzzy part)* |
+| **Detail** | 0–1 | is the text actually in it? *(technique named, or three words quoted)* |
+| **Effect** | 0–1 | does it say what that **does**? *(an analytical verb, not a plot verb)* |
+
+Point gates the total: a fluent, well-anchored answer to a *different* question caps at one
+mark, because naming a technique is worth nothing if the claim is wrong.
+
+You will never see the underlying similarity number. A cosine is not a mark, and dressing
+one up as a band would be the single most dishonest thing this app could do — the mark above
+is a rubric, not a rescaled cosine.
 
 Layer C is **opt-in**. It is not downloaded on first load; Settings offers it behind a
 button with the size stated. Skip it and the three sentence modes still run — they show
@@ -111,16 +123,17 @@ line in this app that matters most.
   Deconstruction, Say It In One, Thesis Forge, Rewrite Rescue
 - **5 module bosses** plus **The Final Paper**, each with a gimmick that attacks a
   different habit — an editor who rewrites your answer, a critic who hides the labels
-- **The Quote Vault** — 277 quotes on a five-box Leitner schedule
-- **Reference screens** — 221 techniques, 12 rubric verbs, the band descriptors, module
+- **The Quote Vault** — 324 quotes on a five-box Leitner schedule
+- **Reference screens** — 229 techniques, 12 rubric verbs, the band descriptors, module
   concepts, essay architecture, per-text quote sheets
 - **The Draft Desk** — somewhere to write, with a word count, an exam clock and export to
   a file. No XP, no Marks, no marking, no one reading over your shoulder
 - **The Arcade** — three games rented with Marks that pay **nothing but a high score**
 
-395 multiple-choice questions, each with a worked explanation. 60 band-tagged paragraphs.
+403 multiple-choice questions, each with a worked explanation. 60 band-tagged paragraphs.
 62 free-text prompts with model answers and near-misses. 14 essay puzzles, 42 topic
-sentence pairs, 79 achievements, 10 themes, 60 levels.
+sentence pairs, 79 achievements, 10 themes, 60 levels. The counts are asserted by
+`tests/suites/validate.js`, so this list cannot quietly drift from what ships.
 
 Two things in this app earn nothing at all, and that is enforced structurally rather than
 promised in a comment: neither `js/core/arcade.js`, `js/games/arcade-*.js` nor
@@ -152,6 +165,49 @@ If something looks stale after an update, **Settings → Force refresh** unregis
 service worker, deletes the shell caches and reloads clean. It keeps your save, and it
 keeps the downloaded model — re-charging somebody 23 MB of mobile data for a new
 stylesheet would be a punishment, not a fix.
+
+## Tests
+
+```
+node tests/run.js            # everything
+node tests/run.js validate   # one suite
+node tests/run.js --list     # what there is
+```
+
+No test framework — adding one would be the first dependency in a project whose premise is
+not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }`.
+
+| suite | needs | what it holds |
+| --- | --- | --- |
+| `validate` | — | content shape, the volume targets, every cross-reference |
+| `bias` | — | can the bank be beaten without reading the question? |
+| `offline` | — | `sw.js` precaches everything `index.html` loads; the model bucket is never swept |
+| `smoke` | browser | every route at 390px **and** 360px, no overflow, no action under the nav bar |
+| `play` | browser | play every mode and a boss; nothing throws, nothing ejects you |
+| `economy` | browser | the anti-rush floor is both real **and** reachable; the arcade pays nothing |
+| `marking` | browser | the marking stack ranks answers the way a marker would |
+
+The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
+without it — the data suites are the ones that must run anywhere.
+
+Every assertion in here exists because something was actually wrong:
+
+- `bias` — the Common-Module bank first measured **69.7%** longest-option-is-the-key against
+  a 25% chance baseline. Fixing that overshot to 1.6% longest and 79% at rank two, so the
+  strategy simply became "pick the second longest". The metric is the whole rank
+  distribution, and it is checked per file, because an overall figure inside the limit hides
+  one badly skewed module.
+- `economy` — the rush floor grew until it exceeded the clock. **99%** of Rapid Fire
+  questions had a floor above their time share, so the mode paid zero to everybody. It now
+  asserts a floor exists *and* that at least ten seconds of every boss round can score.
+- `smoke` — one long unbreakable locus pushed the document 74px past a 360px viewport,
+  because grid items refuse to shrink below their max-content width. And four separate
+  modes put their submit button under the floating nav bar: enabled, on screen, untappable.
+- `play` — a clock that ran through the feedback panel could end a run while the student was
+  reading, which reads as being thrown out of the app.
+- `marking` — the near-miss veto was rejecting good answers for being about the right
+  subject. The suite asserts the *ordering* of a hand-labelled set, not absolute scores, so
+  it survives a model swap.
 
 ## Your save
 

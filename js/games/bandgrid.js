@@ -96,7 +96,9 @@ EN.Games.bandgrid = (function () {
           btn.classList.add("picked");
           EN.Sound.cellSet();
           filledChip.textContent = picks.filter(Boolean).length + " / " + rows.length;
-          submit.disabled = picks.some(p => p === null);
+          const ready = !picks.some(p => p === null);
+          submit.disabled = !ready;
+          submitBar.classList.toggle("stuck", ready);
         });
         td.appendChild(btn);
         tr.appendChild(td);
@@ -106,9 +108,13 @@ EN.Games.bandgrid = (function () {
       return rowBtns;
     });
 
-    const submit = U.el("button", { class: "btn btn-primary btn-block", text: "Submit grid", disabled: true,
-                                    style: "margin-top:14px" });
-    shell.body.appendChild(submit);
+    /* Sticky once the grid is complete. Eight statement rows plus a five-column header is
+       taller than a phone, so this sat at y=874 in an 844px viewport — measured, not
+       guessed. Same treatment as the Essay Architect and the Marking Desk. */
+    const submitBar = U.el("div", { class: "bg-actions" });
+    const submit = U.el("button", { class: "btn btn-primary btn-block js-submit", text: "Submit grid", disabled: true });
+    submitBar.appendChild(submit);
+    shell.body.appendChild(submitBar);
     submit.addEventListener("click", () => score(false));
 
     timerId = setInterval(() => {
@@ -124,7 +130,7 @@ EN.Games.bandgrid = (function () {
       if (submitted) return;
       submitted = true;
       clearInterval(timerId);
-      submit.remove();
+      submitBar.remove();
 
       let right = 0, wrong = 0, blank = 0;
       rows.forEach((r, ri) => {

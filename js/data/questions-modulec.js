@@ -469,5 +469,91 @@ EN.DATA.qModuleC = [
              "It duplicates what the piece already does, which adds nothing for the marker to reward",
              "It suggests the student cannot identify the techniques they used"],
     a:0,
-    why:"This is the rubric-verb problem in a different costume: a good answer to the wrong question. The reflection asks how and why you wrote it that way, and a thematic reading — however sharp — has not addressed the language choices." }
+    why:"This is the rubric-verb problem in a different costume: a good answer to the wrong question. The reflection asks how and why you wrote it that way, and a thematic reading — however sharp — has not addressed the language choices." },
+  /* ── added to clear the 400-question target, which tests/suites/validate.js asserts.
+     Authored as Module C because the Craft bank is text-agnostic, so these work for every
+     student regardless of what their class was prescribed. Same authoring rule as the rest
+     of the bank: the answer is written first, the distractors are drawn to be defensibly
+     wrong rather than obviously so, and the key's length is checked against
+     tests/suites/bias.js afterwards rather than trusted. */
+
+  { id:"mc-046", mod:"moduleC", text:"craft", topic:"Craft", diff:3,
+    stem:"Two openings for the same imaginative piece:\n(i) “The house had been empty for three years.”\n(ii) “Nobody had lived in the house since the accident, which had happened three years earlier.”",
+    q:"Why is (i) the stronger opening?",
+    choices:["It withholds the cause, so the reader supplies a question the piece can then answer",
+             "It uses the past perfect, which is the correct tense for narration beginning in the middle",
+             "It is shorter, and concision is the first quality a marker looks for in an opening",
+             "It avoids the word 'accident', which is too vague to carry a whole opening"],
+    a:0,
+    why:"(ii) answers the question it raises in the same sentence, which leaves the reader nothing to do. Withholding is a structural choice, not a stylistic one — you are deciding when the reader is allowed to know, and an opening that has already told them has spent its opening." },
+
+  { id:"mc-047", mod:"moduleC", text:"craft", topic:"Craft", diff:3,
+    stem:"A discursive piece on memory moves from a childhood anecdote, to a paragraph on how photographs work, to a claim about what remembering is for.",
+    q:"What is that movement doing?",
+    choices:["Earning an abstract claim by arriving at it from a concrete particular",
+             "Demonstrating range, which the discursive form rewards more than a single register",
+             "Delaying the thesis so the reader stays uncertain about the writer's position",
+             "Layering three perspectives so no single one has to carry the argument"],
+    a:0,
+    why:"A claim about what memory is for would be inert stated first. Arriving at it through the anecdote and the photograph makes it feel derived, and derived is what 'earned' means here. The other options describe things the structure also does, but none of them is why it is ordered this way." },
+
+  { id:"mc-048", mod:"moduleC", text:"craft", topic:"Craft", diff:4,
+    stem:"“The kettle screamed. She did not move. The kettle screamed.”",
+    q:"What does the repetition of the first sentence do that a single mention could not?",
+    choices:["It converts a sound into a duration, so the stillness between becomes the subject",
+             "It emphasises the kettle, which functions as a symbol of domestic pressure",
+             "It creates a cyclical structure, implying the scene has happened before",
+             "It slows the pace, giving the reader time to register her refusal to move"],
+    a:0,
+    why:"Repeating it makes the noise continuous rather than an event, and what fills the interval is her not moving. The other readings are available but weaker: they treat the repetition as emphasis, and emphasis is what repetition does when it is not doing something more specific." },
+
+  { id:"mc-049", mod:"moduleC", text:"craft", topic:"Craft", diff:2,
+    stem:"A reflection statement says: “I used short sentences to create tension.”",
+    q:"What would raise this to a Band 6 observation?",
+    choices:["Naming which sentences, and what the tension is between",
+             "Identifying the technique more precisely as syntactic parataxis",
+             "Explaining that short sentences are conventionally associated with pace",
+             "Adding a second technique so the statement covers more of the piece"],
+    a:0,
+    why:"The sentence is not wrong, it is unfalsifiable — it would be true of almost any piece. Tension is always between two things, and naming them turns a claim about technique into a claim about this piece. Precision of terminology is not the missing ingredient; specificity of reference is." },
+
+  { id:"mc-050", mod:"moduleC", text:"craft", topic:"Craft", diff:3,
+    stem:"A stimulus reads: “It was not the leaving that undid her.” A student begins their imaginative response with that sentence verbatim.",
+    q:"What is the risk of opening with the stimulus unchanged?",
+    choices:["The piece inherits a voice it has not established and may not sustain",
+             "Markers deduct for reproducing the stimulus rather than responding to it",
+             "It signals a lack of invention before the writing has begun",
+             "The sentence's rhythm will not match whatever follows it"],
+    a:0,
+    why:"Using the stimulus is legitimate and often expected. The real hazard is tonal: that sentence has a particular poise, and a piece that opens there and then writes plainly has set a standard it fails in its second paragraph. Nobody deducts for quoting the stimulus — they notice when the rest cannot keep up." },
+
+  { id:"mc-051", mod:"moduleC", text:"craft", topic:"Craft", diff:4,
+    stem:"A student's persuasive piece opens with a rhetorical question, uses a rhetorical question as its central pivot, and closes on a third.",
+    q:"What is the strongest objection to that structure?",
+    choices:["A device used at every structural joint stops marking any of them as significant",
+             "Rhetorical questions are a low-order technique and should be used sparingly",
+             "Three questions leave the piece without a stated position to defend",
+             "The reader tires of being addressed directly for the length of a whole piece"],
+    a:0,
+    why:"Repetition of a device is not itself a fault — it becomes one when the device is load-bearing. If the question marks the pivot, and also the opening, and also the close, then it no longer tells the reader which of the three is the turn. The objection is structural, not about the device's prestige." },
+
+  { id:"mc-052", mod:"moduleC", text:"craft", topic:"Craft", diff:3,
+    stem:"Asked to write reflectively on a deliberate choice, a student explains why they cut a paragraph they had already written.",
+    q:"Why is that a strong move in a reflection statement?",
+    choices:["A cut is evidence of a judgement, which is what the module asks you to account for",
+             "It shows the student edited their work, which markers reward as process",
+             "Discussing absent material lets the student cover more ground than the piece contains",
+             "It demonstrates awareness of length constraints in the exam"],
+    a:0,
+    why:"Module C assesses whether you can account for your choices, and a deletion is a choice with a reason attached — you can say what it was doing and why the piece was better without it. Present-tense craft is harder to prove; the thing you removed is unambiguous evidence that you decided." },
+
+  { id:"mc-053", mod:"moduleC", text:"craft", topic:"Craft", diff:2,
+    stem:"A piece describes a character as “devastated, heartbroken, utterly bereft”.",
+    q:"What is the problem with that list?",
+    choices:["Three near-synonyms assert the feeling three times instead of showing it once",
+             "The adverb 'utterly' weakens the phrase it is intended to intensify",
+             "The list is unbalanced, since the third item is longer than the first two",
+             "'Bereft' is archaic and clashes with the register of the other two"],
+    a:0,
+    why:"Accumulation only works when the terms add something — a progression, a widening, a turn. Here each word covers the same ground, so the sentence gets three chances to tell the reader and takes none of them to show. 'Utterly' is a symptom rather than the cause." }
 ];

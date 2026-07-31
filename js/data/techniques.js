@@ -1192,5 +1192,50 @@ EN.DATA.techniques = [
   { id:"compound-epithet", name:"Compound epithet", cat:"register", alts:["hyphenated epithet","kenning","epithet"],
     def:"A hyphenated descriptive compound.",
     effect:"Compresses a whole judgement into a single modifier, which is why it is the engine of good insults.",
-    examples:["'fat-witted', 'pale-faced', 'three-person'd'."] }
+    examples:["'fat-witted', 'pale-faced', 'three-person'd'."] },
+  /* ── added after the validator caught quote tags with no glossary entry ──
+     A tag that resolves to nothing is worse than a missing tag: Technique Hunt can never
+     ask about it, the Vault renders a bare slug where a name should be, and Layer B has
+     no accepted spellings to match against. tests/suites/validate.js now fails the build
+     rather than letting one through. */
+
+  { id:"tone", name:"Tone", cat:"register", alts:["tonal","attitude","tone of voice"],
+    def:"The composer's or speaker's attitude towards the subject and the audience, carried by word choice, rhythm and syntax rather than stated.",
+    effect:"The thing students most often assert and least often prove. Tone is only an observation if you can point at the word doing it — 'condescending' means nothing until you quote the diminutive.",
+    examples:["'Little think'st thou, poor flower' — the diminutives condescend before any argument arrives."] },
+
+  { id:"persona", name:"Persona", cat:"register", alts:["speaker","mask","adopted voice","dramatic speaker"],
+    def:"A constructed speaking voice distinct from the composer, adopted for the duration of a text.",
+    effect:"Lets a composer argue a position they need not hold, which is why 'Donne thinks' is usually the wrong sentence and 'the speaker argues' is usually the right one.",
+    examples:["The libertine of 'The Indifferent' is not the Dean of St Paul's, and is written by him."] },
+
+  { id:"allegory", name:"Allegory", cat:"language", alts:["allegorical","allegorise","extended allegory"],
+    def:"A sustained narrative or figure in which each element stands for something outside the text, usually moral, political or theological.",
+    effect:"Demands to be read on two levels at once, so it can say the forbidden thing while denying it. Distinct from symbolism: an allegory is systematic, a symbol is local.",
+    examples:["The Church as Christ's 'spouse' in Holy Sonnet 18, pushed to the edge of the obscene."] },
+
+  { id:"pathetic-fallacy", name:"Pathetic fallacy", cat:"language", alts:["pathetic falacy","landscape mirrors mood","sympathetic nature"],
+    def:"Attributing human emotion to nature or weather so the setting mirrors a character's state.",
+    effect:"Makes an interior state visible without narrating it, and puts the reader in the position of agreeing with a mood before examining it.",
+    examples:["The garden that cannot be a spring in 'Twicknam Garden' because the speaker arrives ruined."] },
+
+  { id:"subjunctive", name:"Subjunctive mood", cat:"syntax", alts:["subjunctive","hypothetical mood","optative","were-clause"],
+    def:"A verb form marking what is wished, feared, supposed or contrary to fact, rather than what is.",
+    effect:"Lets a text argue about a world that does not exist, and the grammar carries the admission. 'O might those sighs return' concedes that they will not.",
+    examples:["'O might those sighs and tears return again' — the wish is grammatically marked as impossible."] },
+
+  { id:"oath-formula", name:"Oath formula", cat:"rhetoric", alts:["oath","adjuration","invocation formula","by-clause"],
+    def:"A repeated swearing construction — 'by our first interview, by all desires' — that builds obligation before the request it precedes.",
+    effect:"Borrows the force of a legal deposition. The pressure accumulates across the clauses so the demand arrives already half-conceded.",
+    examples:["The stacked 'By…' clauses opening Donne's Elegy 16."] },
+
+  { id:"hierarchy-inversion", name:"Hierarchy inversion", cat:"structure", alts:["inverted hierarchy","chain of being inverted","status reversal"],
+    def:"Deliberately reversing an assumed order of value — natural, social or spiritual — so the lower term outranks the higher.",
+    effect:"Turns an assumption into a claim that must be defended. Self-abasement argued from natural philosophy lands harder than self-abasement asserted.",
+    examples:["'Why do the prodigal elements supply / Life and food to me, being more pure than I' — plants outrank the speaker."] },
+
+  { id:"neoplatonism", name:"Neoplatonic idealism", cat:"language", alts:["neoplatonic","platonic love","soul-body dualism","platonism"],
+    def:"The framework in which physical love is a ladder towards a higher spiritual union, and the body is the soul's instrument.",
+    effect:"Supplies a vocabulary of transcendence that a poem can either honour or exploit. Donne habitually spends twelve stanzas of it to arrive at a request for sex.",
+    examples:["'The Ecstasy': souls negotiate, and the conclusion is that they need bodies after all."] }
 ];
