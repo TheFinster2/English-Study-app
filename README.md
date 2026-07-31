@@ -161,6 +161,20 @@ localStorage on a debounce with an explicit flush when the tab is backgrounded. 
 reward in the app flows through one function, `UI.award()`, and every game gets its chrome
 from `UI.gameShell()` and registers its teardown with `UI.onLeave()`.
 
+### Playing without a mouse
+
+Number keys and A–D pick an option, Enter advances, Escape closes a dialog. Every mode's
+advance and submit button carries `js-next` or `js-submit`, which is what the global binding
+in `app.js` looks for — `tests/suites/a11y.js` asserts every mode has one, because three of
+them were quietly mouse-only until it did.
+
+Dialogs are real dialogs: `role="dialog"`, focus moved in on open, Tab trapped inside, focus
+restored on close. Feedback panels and verdicts are `aria-live="polite"`, so the answer to
+"was I right" is spoken. Timers are `aria-live="off"` — a chip changing once a second is read
+aloud once a second otherwise, which makes a timed mode unusable rather than just unlabelled.
+Boss health bars are real `progressbar`s because they have no text equivalent; mastery bars
+are `aria-hidden` because their percentage is already printed beside them.
+
 If something looks stale after an update, **Settings → Force refresh** unregisters every
 service worker, deletes the shell caches and reloads clean. It keeps your save, and it
 keeps the downloaded model — re-charging somebody 23 MB of mobile data for a new
@@ -186,6 +200,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `play` | browser | play every mode and a boss; nothing throws, nothing ejects you |
 | `economy` | browser | the anti-rush floor is both real **and** reachable; the arcade pays nothing |
 | `marking` | browser | the marking stack ranks answers the way a marker would |
+| `a11y` | browser | keyboard play, dialog semantics, and what gets announced |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -208,6 +223,10 @@ Every assertion in here exists because something was actually wrong:
 - `marking` — the near-miss veto was rejecting good answers for being about the right
   subject. The suite asserts the *ordering* of a hand-labelled set, not absolute scores, so
   it survives a model swap.
+- `a11y` — three modes had no `js-next`/`js-submit` class, so the global Enter binding
+  could not reach them and they were quietly mouse-only. Modals had no dialog semantics and
+  no focus trap. And every timer needed `aria-live="off"`: a chip that changes once a second
+  is read aloud once a second, which makes a timed mode unusable rather than just unlabelled.
 
 ## Your save
 

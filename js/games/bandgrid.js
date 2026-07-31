@@ -68,7 +68,7 @@ EN.Games.bandgrid = (function () {
     const shell = UI.gameShell(c.title, { confirmExit: true });
     root.appendChild(shell.root);
     const filledChip = UI.chip("0 / " + rows.length);
-    const timeChip = U.el("span", { class: "timer-ring", text: U.fmtTime(timeLeft) });
+    const timeChip = U.el("span", { class: "timer-ring", "aria-live": "off", role: "timer", text: U.fmtTime(timeLeft) });
     shell.meta.appendChild(filledChip); shell.meta.appendChild(timeChip);
 
     shell.body.appendChild(U.el("p", { class: "muted",

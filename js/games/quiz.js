@@ -6,7 +6,7 @@ EN.Games = EN.Games || {};
 
 /* ── shared question card ──────────────────────────────────── */
 EN.QuizCore = (function () {
-  const U = EN.U;
+  const U = EN.U, UI = EN.UI;
   const KEYS = ["A", "B", "C", "D", "E", "F"];
 
   /** Render a question's stem: a quote block with a highlight, or plain prose. */
@@ -105,6 +105,7 @@ EN.QuizCore = (function () {
           U.el("span", { text: q.why })
         ])
       ]);
+      UI.announce(fb);
       node.appendChild(fb);
       return fb;
     }
@@ -173,7 +174,7 @@ EN.Games.quiz = (function () {
     const scoreChip  = UI.chip("0 XP");
     const streakChip = UI.chip("Streak 0");
     const livesChip  = c.lives ? UI.chip("❤️".repeat(lives)) : null;
-    const timerChip  = c.totalTime ? U.el("span", { class: "timer-ring", text: U.fmtTime(timeLeft) }) : null;
+    const timerChip  = c.totalTime ? U.el("span", { class: "timer-ring", "aria-live": "off", role: "timer", text: U.fmtTime(timeLeft) }) : null;
     [scoreChip, streakChip, livesChip, timerChip].forEach(n => n && shell.meta.appendChild(n));
 
     const stage = U.el("div");

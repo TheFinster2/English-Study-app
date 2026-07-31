@@ -137,9 +137,19 @@ EN.Games.boss = (function () {
     const shell = UI.gameShell(boss.icon + " " + boss.name, { confirmExit: true, backTo: "/boss" });
     root.appendChild(shell.root);
 
-    const bossBar = U.el("div", { class: "hpbar enemy" }, [U.el("i", { style: "width:100%" })]);
-    const myBar = U.el("div", { class: "hpbar" }, [U.el("i", { style: "width:100%" })]);
-    const timeChip = U.el("span", { class: "timer-ring", text: "" });
+    /* Real progressbar semantics, because unlike the mastery bars elsewhere these have NO
+       text equivalent — HP is shown only as a bar, so without this a screen-reader user
+       cannot tell whether they are winning. drawBars keeps aria-valuenow in step. */
+    const bossBar = U.el("div", { class: "hpbar enemy", role: "progressbar",
+                                  "aria-label": boss.name + " health",
+                                  "aria-valuemin": "0", "aria-valuemax": String(boss.hp),
+                                  "aria-valuenow": String(boss.hp) },
+                         [U.el("i", { style: "width:100%" })]);
+    const myBar = U.el("div", { class: "hpbar", role: "progressbar", "aria-label": "Your health",
+                                "aria-valuemin": "0", "aria-valuemax": String(boss.playerHp),
+                                "aria-valuenow": String(boss.playerHp) },
+                       [U.el("i", { style: "width:100%" })]);
+    const timeChip = U.el("span", { class: "timer-ring", "aria-live": "off", role: "timer", text: "" });
     shell.meta.appendChild(timeChip);
     shell.body.appendChild(U.el("div", { class: "card" }, [
       U.el("div", { class: "row", style: "margin-bottom:6px" }, [
@@ -163,6 +173,10 @@ EN.Games.boss = (function () {
     function drawBars() {
       bossBar.firstChild.style.width = Math.max(0, (bossHp / boss.hp) * 100) + "%";
       myBar.firstChild.style.width = Math.max(0, (myHp / boss.playerHp) * 100) + "%";
+      bossBar.setAttribute("aria-valuenow", String(Math.max(0, bossHp)));
+      bossBar.setAttribute("aria-valuetext", Math.max(0, bossHp) + " of " + boss.hp + " left");
+      myBar.setAttribute("aria-valuenow", String(Math.max(0, myHp)));
+      myBar.setAttribute("aria-valuetext", Math.max(0, myHp) + " of " + boss.playerHp + " left");
       if (myHp === 1) EN.Sound.lowHealth();
     }
 

@@ -257,6 +257,7 @@ EN.Games.marking = (function () {
           ]) : null,
           tooFast ? U.el("div", { class: "lc-flag", text: "⏱️ Marked faster than that paragraph can be read — no XP for it." }) : null
         ]);
+        UI.announce(verdict);
         stage.appendChild(verdict);
         verdict.scrollIntoView({ behavior: EN.FX.isReduced() ? "auto" : "smooth", block: "nearest" });
         EN.Sound.reveal();

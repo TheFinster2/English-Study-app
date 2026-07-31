@@ -122,7 +122,7 @@ EN.Arcade = (function () {
   function shell(root, cfg) {
     const s = UI.gameShell(cfg.icon + " " + cfg.name, { backTo: "/arcade" });
     root.appendChild(s.root);
-    const timeChip = U.el("span", { class: "timer-ring", text: U.fmtTime(remaining(cfg.arcadeId)) });
+    const timeChip = U.el("span", { class: "timer-ring", "aria-live": "off", role: "timer", text: U.fmtTime(remaining(cfg.arcadeId)) });
     const scoreChip = UI.chip("0");
     const bestChip = UI.chip("🏆 " + best(cfg.arcadeId));
     [scoreChip, bestChip, timeChip].forEach(n => s.meta.appendChild(n));

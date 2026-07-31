@@ -193,6 +193,7 @@ EN.Games.deconstruct = (function () {
           text: isLast ? "See results" : "Next question →",
           on: { click: () => { if (isLast) return finish(); idx++; EN.Sound.page(); render(); } } });
         fb.appendChild(U.el("div", { class: "row", style: "margin-top:12px" }, [next]));
+        UI.announce(fb);
         card.appendChild(fb);
         next.focus();
       }

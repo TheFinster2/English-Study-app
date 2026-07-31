@@ -338,6 +338,7 @@ EN.Games.layerc = (function () {
             text: "Structural checks met: " + met + " of 5. Those are deterministic — they do not depend on the model." }));
         }
 
+        UI.announce(box);
         stage.appendChild(box);
         box.scrollIntoView({ behavior: EN.FX.isReduced() ? "auto" : "smooth", block: "nearest" });
 

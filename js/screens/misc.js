@@ -195,7 +195,13 @@ EN.Screens.misc = (function () {
 
     const status = U.el("div", { class: "lc-status" });
     box.appendChild(status);
-    const bar = U.el("div", { class: "bar", hidden: true }, [U.el("i", { style: "width:0%" })]);
+    /* Announced, unlike the decorative mastery bars: this is a 23 MB download and its
+       progress is the whole reason the bar exists. `lc-prog` beside it carries the MB
+       figure as text, and aria-valuetext repeats it for a reader. */
+    const bar = U.el("div", { class: "bar", hidden: true, role: "progressbar",
+                              "aria-label": "Model download",
+                              "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": "0" },
+                     [U.el("i", { style: "width:0%" })]);
     box.appendChild(bar);
     const actions = U.el("div", { class: "row", style: "margin-top:10px; flex-wrap:wrap" });
     box.appendChild(actions);
@@ -250,6 +256,9 @@ EN.Screens.misc = (function () {
       M.downloadModel(p => {
         const pctDone = U.clamp((p.received / p.total) * 100, 0, 100);
         fill.style.width = pctDone.toFixed(1) + "%";
+        bar.setAttribute("aria-valuenow", pctDone.toFixed(0));
+        bar.setAttribute("aria-valuetext",
+          (p.received / 1e6).toFixed(0) + " of " + (p.total / 1e6).toFixed(0) + " MB");
         if (label) {
           label.textContent = (p.received / 1e6).toFixed(1) + " / " + (p.total / 1e6).toFixed(0) +
                               " MB" + (p.file ? " · " + p.file.split("/").pop() : "");
@@ -426,7 +435,7 @@ EN.Screens.misc = (function () {
       tile(U.pct(got.length, all.length) + "%", "Complete"),
       tile(got.reduce((n, a) => n + a.reward, 0), "✒️ earned")
     ]));
-    view.appendChild(U.el("div", { class: "bar", style: "margin-top:12px" },
+    view.appendChild(U.el("div", { class: "bar", "aria-hidden": "true", style: "margin-top:12px" },
       [U.el("i", { style: "width:" + U.pct(got.length, all.length) + "%" })]));
 
     let shown = "all";

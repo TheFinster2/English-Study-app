@@ -153,7 +153,7 @@ EN.Screens.draft = (function () {
     view.appendChild(shell.root);
 
     const wordChip = UI.chip("0 words");
-    const clockChip = U.el("span", { class: "timer-ring", text: "0:00" });
+    const clockChip = U.el("span", { class: "timer-ring", "aria-live": "off", role: "timer", text: "0:00" });
     const savedChip = UI.chip("saved");
     [wordChip, clockChip, savedChip].forEach(n => shell.meta.appendChild(n));
 

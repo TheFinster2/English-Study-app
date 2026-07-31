@@ -72,7 +72,7 @@ EN.Screens.play = (function () {
           U.el("div", { class: "tiny muted", style: "margin:6px 0",
             text: d.claimed ? "Claimed. Back tomorrow."
                             : d.progress + " / " + spec.target + " — worth " + spec.xp + " XP and " + spec.reward + " ✒️" }),
-          U.el("div", { class: "bar" }, [U.el("i", { style: "width:" + U.pct(d.progress, spec.target) + "%" })])
+          U.el("div", { class: "bar", "aria-hidden": "true" }, [U.el("i", { style: "width:" + U.pct(d.progress, spec.target) + "%" })])
         ]),
         d.progress >= spec.target && !d.claimed
           ? U.el("button", { class: "btn btn-primary btn-sm", text: "Claim",

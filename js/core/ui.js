@@ -7,6 +7,7 @@ EN.UI = (function () {
   const S = EN.State;
   const routes = {};
   let currentCleanup = null;
+  let trapHandler = null, lastFocus = null;
 
   /** Runs below this accuracy earn no completion bonus at all. */
   const MIN_BONUS_ACCURACY = 0.5;
@@ -177,6 +178,20 @@ EN.UI = (function () {
     view.focus({ preventScroll: true });
   }
 
+  /**
+   * Mark a node as something a screen reader should announce when it changes.
+   *
+   * Used for the feedback panel and the verdict box: they are the answer to "was I right",
+   * and they appear silently. `polite` rather than `assertive` so it waits for the reader
+   * to finish the sentence it is on instead of interrupting.
+   */
+  function announce(node) {
+    if (!node) return node;
+    node.setAttribute("aria-live", "polite");
+    node.setAttribute("role", "status");
+    return node;
+  }
+
   /** Register a cleanup for the current screen (timers, listeners). */
   function onLeave(fn) { currentCleanup = fn; }
 
@@ -229,16 +244,51 @@ EN.UI = (function () {
   /* ── modals ──────────────────────────────────────────────── */
   let escHandler = null;
 
+  /**
+   * Open a modal.
+   *
+   * Given real dialog semantics rather than being a styled div: without role="dialog" and
+   * aria-modal a screen reader keeps reading the page behind it, and without the focus
+   * trap Tab walks out of the dialog into content the student cannot see. Focus is
+   * returned to whatever opened it on close, which is what makes keyboard play survive a
+   * results screen.
+   */
   function modal(content, opts) {
     const o = opts || {};
     const root = U.$("#modal-root");
     closeModal();
     root.hidden = false;
+    root.setAttribute("role", "dialog");
+    root.setAttribute("aria-modal", "true");
 
     const box = U.el("div", { class: "modal" + (o.center ? " modal-center" : "") });
     if (typeof content === "string") box.innerHTML = content;
     else box.appendChild(content);
     root.appendChild(box);
+
+    /* Label the dialog by its own heading where it has one. */
+    const heading = box.querySelector("h2, h3");
+    if (heading) {
+      heading.id = heading.id || "modal-title";
+      root.setAttribute("aria-labelledby", heading.id);
+    } else root.removeAttribute("aria-labelledby");
+
+    lastFocus = document.activeElement;
+    const focusables = () => Array.from(box.querySelectorAll(
+      "button:not([disabled]), a[href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex='-1'])"));
+    const first = focusables()[0];
+    if (first) first.focus();
+
+    /* The trap. Tab and Shift-Tab wrap inside the dialog rather than escaping it. */
+    trapHandler = e => {
+      if (e.key !== "Tab") return;
+      const list = focusables();
+      if (!list.length) return;
+      const at = list.indexOf(document.activeElement);
+      if (e.shiftKey && (at <= 0)) { e.preventDefault(); list[list.length - 1].focus(); }
+      else if (!e.shiftKey && at === list.length - 1) { e.preventDefault(); list[0].focus(); }
+    };
+    document.addEventListener("keydown", trapHandler);
 
     if (!o.sticky) {
       root.onclick = e => { if (e.target === root) closeModal(); };
@@ -253,10 +303,23 @@ EN.UI = (function () {
     root.hidden = true;
     root.innerHTML = "";
     root.onclick = null;
+    root.removeAttribute("role");
+    root.removeAttribute("aria-modal");
+    root.removeAttribute("aria-labelledby");
     if (escHandler) {
       document.removeEventListener("keydown", escHandler);
       escHandler = null;
     }
+    if (trapHandler) {
+      document.removeEventListener("keydown", trapHandler);
+      trapHandler = null;
+    }
+    /* Put focus back where it was, but only if that element is still on the page — after
+       a results modal the whole screen has usually been replaced. */
+    if (lastFocus && lastFocus.isConnected && typeof lastFocus.focus === "function") {
+      try { lastFocus.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+    }
+    lastFocus = null;
   }
 
   function confirmDialog(title, body, onYes, yesLabel) {
@@ -504,6 +567,6 @@ EN.UI = (function () {
 
   return { route, go, init, handleRoute, syncHeader, applyTheme, toast, modal, closeModal,
            confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse,
-           crutch, crutchCost, readTimeFor, rushFloor, rushHint, timeBudget,
+           crutch, crutchCost, readTimeFor, rushFloor, rushHint, timeBudget, announce,
            MIN_BONUS_ACCURACY, READ_BASE_MS, READ_PER_WORD_MS, READ_CAP_MS };
 })();

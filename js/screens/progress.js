@@ -25,7 +25,7 @@ EN.Screens.progress = function (view) {
       U.el("div", { class: "mastery-badge", text: tier.icon }),
       U.el("div", { class: "mastery-body" }, [
         U.el("div", { class: "mastery-name", text: m.code + " — " + m.short }),
-        U.el("div", { class: "bar" }, [U.el("i", { style: "width:" + m.mastery + "%" })]),
+        U.el("div", { class: "bar", "aria-hidden": "true" }, [U.el("i", { style: "width:" + m.mastery + "%" })]),
         U.el("div", { class: "tiny muted", style: "margin-top:4px",
           text: m.correct + "/" + m.seen + " correct · " + m.accuracy + "% raw · " + tier.name })
       ]),
@@ -42,7 +42,7 @@ EN.Screens.progress = function (view) {
       U.el("div", { class: "mastery-badge", text: tier.icon }),
       U.el("div", { class: "mastery-body" }, [
         U.el("div", { class: "mastery-name", text: t.title }),
-        U.el("div", { class: "bar" }, [U.el("i", { style: "width:" + t.mastery + "%" })]),
+        U.el("div", { class: "bar", "aria-hidden": "true" }, [U.el("i", { style: "width:" + t.mastery + "%" })]),
         U.el("div", { class: "tiny muted", style: "margin-top:4px",
           text: t.correct + "/" + t.seen + " correct · " + t.quotes + " quotes · " + tier.name })
       ]),

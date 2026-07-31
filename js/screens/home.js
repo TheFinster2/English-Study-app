@@ -85,7 +85,7 @@ EN.Screens.home = function (view) {
       U.el("div", { class: "mastery-badge", text: tier.icon }),
       U.el("div", { class: "mastery-body" }, [
         U.el("div", { class: "mastery-name", text: m.code + " — " + m.short }),
-        U.el("div", { class: "bar" }, [U.el("i", { style: "width:" + m.mastery + "%" })])
+        U.el("div", { class: "bar", "aria-hidden": "true" }, [U.el("i", { style: "width:" + m.mastery + "%" })])
       ]),
       U.el("div", { class: "mastery-pct", text: m.mastery + "%" })
     ]));
@@ -109,7 +109,7 @@ EN.Screens.home = function (view) {
               on: { click: () => { if (S.claimQuest(e.quest.id)) { EN.Sound.quest(); EN.FX.confetti(80); UI.handleRoute(); } } } })
           : U.el("span", { class: "chip", text: e.done + " / " + e.target })
       ]),
-      e.claimed ? null : U.el("div", { class: "bar", style: "margin-top:8px" },
+      e.claimed ? null : U.el("div", { class: "bar", "aria-hidden": "true", style: "margin-top:8px" },
         [U.el("i", { style: "width:" + U.pct(e.done, e.target) + "%" })])
     ]));
   });

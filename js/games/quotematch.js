@@ -89,7 +89,7 @@ EN.Games.quotematch = (function () {
     root.appendChild(shell.root);
     const kindChip = UI.chip(kind.name);
     const moveChip = UI.chip("0 moves");
-    const timeChip = U.el("span", { class: "timer-ring", text: "0:00" });
+    const timeChip = U.el("span", { class: "timer-ring", "aria-live": "off", role: "timer", text: "0:00" });
     [kindChip, moveChip, timeChip].forEach(n => shell.meta.appendChild(n));
 
     const grid = U.el("div", { class: "mgrid" });
