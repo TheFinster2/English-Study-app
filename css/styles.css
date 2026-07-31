@@ -897,3 +897,25 @@ ul.tight li{ font-size:13px; line-height:1.6; color:var(--ink-dim); margin-botto
 /* An opening line is the fastest way to recognise a poem, so it is shown rather than
    just the title — but it must wrap, not stretch the row (§9.2). */
 .poem-open{ font-style:italic; overflow-wrap:break-word; }
+
+/* ---------- the mark out of four ---------- */
+.lc-head{ display:flex; align-items:flex-start; gap:12px; }
+.lc-head .lc-word{ flex:1; min-width:0; margin-bottom:0; }
+/* Deliberately a mark, not a percentage. Four is a number a student can hold; 68% invites
+   them to treat a similarity score as a band, which it is not (§12). */
+.lc-mark{ flex:none; display:flex; align-items:baseline; gap:1px; padding:4px 11px; border-radius:12px;
+  background:var(--card-2); border:1px solid var(--line); font-family:"Segoe UI",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums; }
+.lc-mark b{ font-size:22px; font-weight:800; }
+.lc-mark span{ font-size:13px; color:var(--ink-faint); font-weight:700; }
+.lc-criteria{ display:grid; gap:6px; margin:12px 0 4px; }
+.lc-crit{ display:flex; gap:10px; align-items:flex-start; padding:9px 11px; border-radius:11px;
+  background:var(--card); border:1px solid var(--line); }
+.lc-crit.full{ border-color:color-mix(in srgb,var(--good) 45%,transparent); }
+.lc-crit.part{ border-color:color-mix(in srgb,var(--warn) 45%,transparent); }
+.lc-crit-mark{ flex:none; min-width:30px; font-weight:800; font-size:12.5px;
+  font-family:"Segoe UI",system-ui,sans-serif; font-variant-numeric:tabular-nums; color:var(--ink-faint); }
+.lc-crit.full .lc-crit-mark{ color:var(--good); }
+.lc-crit.part .lc-crit-mark{ color:var(--warn); }
+.lc-crit-body{ flex:1; min-width:0; font-size:13px; }
+.lc-crit-body b{ font-size:13px; }

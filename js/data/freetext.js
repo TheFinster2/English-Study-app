@@ -25,6 +25,14 @@
 window.EN = window.EN || {};
 EN.DATA = EN.DATA || {};
 
+/* ── A NOTE ON `threshold` ────────────────────────────────────────────────────
+   0.50, not the 0.62 these shipped with. Cosine punishes length: on a hand-labelled
+   set the strongest answers averaged 0.61 while two merely adequate one-clause answers
+   scored 0.64 and 0.75, because a short blunt sentence reuses the exemplar's shape. At
+   0.62 that penalised precisely the students writing best — a good answer would come
+   back "not yet" for being longer than the model. Point is worth two of the four marks
+   and the other two are deterministic, which is what makes a lower bar safe.
+   ──────────────────────────────────────────────────────────────────────────── */
 EN.DATA.freeText = [
 
   /* ═══ Say It In One — 1984 ═════════════════════════════════ */
@@ -39,7 +47,7 @@ EN.DATA.freeText = [
       "The Party uses slogans because propaganda is memorable and easy to repeat.",
       "Language is controlled by the people rather than by the Party.",
       "Orwell shows that words cannot really change what people privately believe."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-002", mod:"common", text:"1984", mode:"sayit", domain:"common/chiasmus",
     quote:"1984-q04",
@@ -53,7 +61,7 @@ EN.DATA.freeText = [
       "The repetition makes the slogan rhythmic and easy for citizens to memorise.",
       "The inversion shows that the future controls the past rather than the other way round.",
       "The structure emphasises the importance of history to the Party's programme."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-003", mod:"common", text:"1984", mode:"sayit", domain:"common/synecdoche",
     quote:"1984-q07",
@@ -67,7 +75,7 @@ EN.DATA.freeText = [
       "It makes the violence more vivid, so the reader can picture the suffering clearly.",
       "It shows that the soldier is more powerful than the prisoner beneath him.",
       "It generalises the image so the reader sees oppression as a recurring historical pattern."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-004", mod:"common", text:"1984", mode:"sayit", domain:"common/appendix",
     prompt:"In one sentence, state why the Appendix's past tense contradicts the novel's ending.",
@@ -80,7 +88,7 @@ EN.DATA.freeText = [
       "The Appendix confirms that Newspeak succeeded in eliminating thoughtcrime completely.",
       "The past tense shows that Winston's rebellion had already failed before the novel began.",
       "It explains the Party's language so readers can understand the slogans in the narrative."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-005", mod:"common", text:"1984", mode:"sayit", domain:"common/fid",
     quote:"1984-q49",
@@ -94,7 +102,7 @@ EN.DATA.freeText = [
       "It shows that Winston is speaking aloud, so his conversion has become public.",
       "It creates distance so the reader can judge Winston's defeat objectively.",
       "It gives the narrator's own verdict on whether Winston's situation has improved."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-006", mod:"common", text:"1984", mode:"sayit", domain:"common/anomaly",
     prompt:"In one sentence, state the anomaly in Winston's attitude to the proles.",
@@ -107,7 +115,7 @@ EN.DATA.freeText = [
       "Winston believes the proles will overthrow the Party, and the novel proves him right.",
       "He is contemptuous of the proles and never hopes for anything from them at all.",
       "The proles are more free than Winston because the Party does not watch them."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-007", mod:"common", text:"1984", mode:"sayit", domain:"common/room101",
     prompt:"In one sentence, state what Room 101's individuation reveals about the Party's aims.",
@@ -120,7 +128,7 @@ EN.DATA.freeText = [
       "It makes the torture unpredictable, so prisoners cannot prepare for what awaits them.",
       "It shows the Party is more interested in information than in obedience.",
       "Fear is cheaper to administer across a population than physical violence."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-008", mod:"common", text:"1984", mode:"sayit", domain:"common/passive",
     quote:"1984-q25",
@@ -134,7 +142,7 @@ EN.DATA.freeText = [
       "The passive voice emphasises the enormous scale of the Party's falsification programme.",
       "It creates a formal documentary register suited to Winston's archival work.",
       "It shows that Winston refuses to take responsibility for what he has done."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-009", mod:"common", text:"1984", mode:"sayit", domain:"common/doublethink",
     prompt:"In one sentence, state why doublethink is more frightening than external coercion.",
@@ -147,7 +155,7 @@ EN.DATA.freeText = [
       "It saves the Party the cost of maintaining telescreens and Thought Police everywhere.",
       "It shows the population is complicit rather than oppressed, which absolves the Party.",
       "Doublethink is a form of confusion that makes citizens easier to mislead."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-010", mod:"common", text:"1984", mode:"sayit", domain:"common/opening",
     quote:"1984-q01",
@@ -161,7 +169,7 @@ EN.DATA.freeText = [
       "It signals the novel's genre immediately so the reader sets aside expectations of realism.",
       "It contrasts the pleasant weather with the harshness of the regime that governs it.",
       "The clocks introduce the motif of time that structures Winston's working day."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   /* ═══ Say It In One — Donne ════════════════════════════════ */
   { id:"ft-011", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/apostrophe",
@@ -176,7 +184,7 @@ EN.DATA.freeText = [
       "It establishes a sombre tone appropriate to a devotional sonnet about dying.",
       "It shows the speaker is frightened of death and is trying to reassure himself.",
       "Personification was the conventional opening for a religious poem of the period."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-012", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/conceit",
     quote:"donne-q14",
@@ -190,7 +198,7 @@ EN.DATA.freeText = [
       "It is longer and more elaborate than an ordinary simile would be.",
       "It compares two very unlike things, which creates a striking visual image.",
       "It is characteristic of the metaphysical poets and their fondness for ingenuity."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-013", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/spondee",
     quote:"donne-q04",
@@ -204,7 +212,7 @@ EN.DATA.freeText = [
       "The irregular metre reflects the speaker's genuine spiritual distress and confusion.",
       "The rhythm imitates the fragmentation of the heart he is asking God to break.",
       "The metre is rough because Donne was careless about accent in his verse."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-014", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/polyptoton",
     quote:"donne-q02",
@@ -218,7 +226,7 @@ EN.DATA.freeText = [
       "It emphasises the word death through repetition, which increases the line's force.",
       "It creates a memorable closing cadence of the kind a sonnet's couplet requires.",
       "It shows that death will be defeated at the Last Judgement according to scripture."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-015", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/volta",
     quote:"donne-q11",
@@ -232,7 +240,7 @@ EN.DATA.freeText = [
       "It completes the octave by explaining why the trumpets should sound at this moment.",
       "It restricts the summons to the righteous rather than to all the dead.",
       "It resolves the sonnet's problem by turning from judgement to mercy."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-016", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/syllogism",
     quote:"donne-q22",
@@ -246,7 +254,7 @@ EN.DATA.freeText = [
       "It shows that seduction and logic use exactly the same techniques of persuasion.",
       "It proves that physical intimacy is as trivial as the speaker claims it is.",
       "It demonstrates that the beloved's objections rest on convention rather than principle."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-017", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/aubade",
     quote:"donne-q18",
@@ -260,7 +268,7 @@ EN.DATA.freeText = [
       "It characterises the speaker as irritable and therefore unreliable as a lover.",
       "It makes the poem comic, so its extravagant claims need not be taken seriously.",
       "It shows the speaker resents having to leave and get on with his day."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-018", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/hymn",
     quote:"donne-q25",
@@ -274,7 +282,7 @@ EN.DATA.freeText = [
       "It shows the physical helplessness that serious illness imposes on the body.",
       "It signals the humility expected of devotional verse in the seventeenth century.",
       "It suggests he will join a heavenly choir and sing alongside the saints."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   /* ═══ Say It In One — W;t ══════════════════════════════════ */
   { id:"ft-019", mod:"moduleA", text:"wit", mode:"sayit", domain:"moduleA/insidious",
@@ -289,7 +297,7 @@ EN.DATA.freeText = [
       "It demonstrates her intellectual superiority over the oncologist treating her.",
       "It shows she has not accepted the diagnosis and is arguing about terminology instead.",
       "It proves that literary training is more rigorous than medical training."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-020", mod:"moduleA", text:"wit", mode:"sayit", domain:"moduleA/comma",
     quote:"wit-q06",
@@ -303,7 +311,7 @@ EN.DATA.freeText = [
       "The semicolon divides the title as death divides life, which the structure repeats.",
       "It shows that Edson knew Donne's poetry well enough to notice the punctuation.",
       "A comma would have looked like a typographical error in the title of a play."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-021", mod:"moduleA", text:"wit", mode:"sayit", domain:"moduleA/anagnorisis",
     quote:"wit-q10",
@@ -317,7 +325,7 @@ EN.DATA.freeText = [
       "It shows she has lost the authority to narrate her own situation to the audience.",
       "It admits that her illness has progressed beyond the point where intelligence could help.",
       "It reveals that the medical staff have understood something she was concealing."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-022", mod:"moduleA", text:"wit", mode:"sayit", domain:"moduleA/silence",
     quote:"wit-q40",
@@ -331,7 +339,7 @@ EN.DATA.freeText = [
       "It provides visual closure for an audience that has had no interval or scene break.",
       "It leaves the ending open so the audience can interpret it however they wish.",
       "The nakedness symbolises the vulnerability of a patient in a hospital gown."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-023", mod:"moduleA", text:"wit", mode:"sayit", domain:"moduleA/mirroring",
     prompt:"In one sentence, state what Edson argues by staging Kelekian's grand rounds and Vivian's seminar identically.",
@@ -344,7 +352,7 @@ EN.DATA.freeText = [
       "It shows that medical and academic institutions are both cold and impersonal places.",
       "It establishes Kelekian as Vivian's intellectual equal and therefore a worthy antagonist.",
       "It invites the audience to laugh at the self-importance of both professions."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-024", mod:"moduleA", text:"wit", mode:"sayit", domain:"moduleA/susie",
     quote:"wit-q23",
@@ -358,7 +366,7 @@ EN.DATA.freeText = [
       "Susie lacks the vocabulary for a longer argument, which the play treats as a strength.",
       "The abbreviation is faster than a sentence, which the medical emergency requires.",
       "It echoes the play's interest in how much meaning a very short mark can carry."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-025", mod:"moduleA", text:"wit", mode:"sayit", domain:"moduleA/island",
     prompt:"In one sentence, state what W;t does with Donne's claim that no man is an island.",
@@ -371,7 +379,7 @@ EN.DATA.freeText = [
       "It proves the claim false, since Vivian dies essentially alone despite Donne's assertion.",
       "It confirms the claim through Susie, whose care shows that no patient is an island.",
       "It suggests scholarship can substitute for human connection if pursued seriously enough."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   /* ═══ Say It In One — Henry IV ═════════════════════════════ */
   { id:"ft-026", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/verse-shift",
@@ -386,7 +394,7 @@ EN.DATA.freeText = [
       "Verse marks him as a prince, which distinguishes him from his tavern companions.",
       "The change shows he is being sincere for the first time in the scene.",
       "Falstaff speaks prose because he is a commoner and Hal speaks verse because he is royal."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-027", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/hotspur-foil",
     prompt:"In one sentence, state why Shakespeare's aging-down of Hotspur is strong evidence for the play's designed unity.",
@@ -399,7 +407,7 @@ EN.DATA.freeText = [
       "It allows the two men to fight in single combat, which the play's climax requires.",
       "It makes the rebellion a conflict between generations, which runs through the tetralogy.",
       "It gives Hal a rival of comparable rank, which raises the stakes of the final act."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-028", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/catechism",
     quote:"h4-q30",
@@ -413,7 +421,7 @@ EN.DATA.freeText = [
       "It grounds the speech in the battle, which makes Falstaff's cynicism feel observed.",
       "The ordinariness of a Wednesday deflates the grandeur Hotspur has been pursuing.",
       "It shows Falstaff has been counting the dead, which makes him more attentive than he appears."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-029", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/extempore",
     quote:"h4-q24",
@@ -427,7 +435,7 @@ EN.DATA.freeText = [
       "It is the shortest speech Hal makes, and the brevity makes the refusal unmistakable.",
       "It confirms the plan announced in the soliloquy, which the audience had hoped he would abandon.",
       "Falstaff has just made his best argument, and Hal refuses it without hesitating."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-030", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/honour-triangle",
     prompt:"In one sentence, state what the play does with its three incompatible definitions of honour.",
@@ -440,7 +448,7 @@ EN.DATA.freeText = [
       "It concludes that Hal's pragmatic version is the only one compatible with effective government.",
       "It arranges them from naive to sophisticated, with Falstaff's cynicism as its own position.",
       "It shows that honour is a meaningless word, which the catechism establishes conclusively."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-031", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/worcester",
     quote:"h4-q44",
@@ -454,7 +462,7 @@ EN.DATA.freeText = [
       "In the strategic incompetence of the rebel leadership at the battle of Shrewsbury.",
       "In the King's superior forces, which no amount of courage could have overcome.",
       "In the illegitimacy of the Percy claim, which the play exposes as self-interest."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-032", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/king-richard",
     quote:"h4-q26",
@@ -468,7 +476,7 @@ EN.DATA.freeText = [
       "That the behaviour he condemns in Richard is the behaviour he condemns in Hal.",
       "That an audience who knows Richard II will find his moral authority compromised.",
       "That his son does not respect him because his own claim to the throne is weak."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   /* ═══ Thesis Forge ═════════════════════════════════════════ */
   { id:"ft-033", mod:"common", text:"1984", mode:"thesis", domain:"thesis/common-language",
@@ -696,7 +704,7 @@ EN.DATA.freeText = [
       "Signposting makes the piece predictable, which reduces the reader's engagement with it.",
       "Numbered sections are inappropriate in continuous prose and look like an essay plan.",
       "Discursive writing should be personal, and signposting sounds too formal for the form."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-050", mod:"moduleC", mode:"sayit", domain:"craft/concession",
     prompt:"In one sentence, state what a persuasive piece forfeits by omitting the concession.",
@@ -709,7 +717,7 @@ EN.DATA.freeText = [
       "It loses marks for structure, since the standard persuasive form requires a counter-argument.",
       "The reader becomes bored, since one-sided argument is monotonous over eight hundred words.",
       "It forfeits the chance to demonstrate a wider range of rhetorical techniques."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-051", mod:"moduleC", mode:"sayit", domain:"craft/specificity",
     prompt:"In one sentence, state why 'the neighbour's kelpie started up again' outperforms 'a dog barked somewhere'.",
@@ -722,7 +730,7 @@ EN.DATA.freeText = [
       "It uses an Australian reference, which grounds the piece in a recognisable place.",
       "It shows the narrator is familiar with the location and its surroundings.",
       "It is more descriptive, which makes the writing more vivid for the reader."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-052", mod:"moduleC", mode:"sayit", domain:"craft/twist",
     prompt:"In one sentence, state the structural objection to a twist ending.",
@@ -735,7 +743,7 @@ EN.DATA.freeText = [
       "Twist endings are a cliché that markers will have seen many times before.",
       "They are difficult to execute convincingly in a piece of only eight hundred words.",
       "It leaves nothing for the reflection statement to account for afterwards."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-053", mod:"moduleC", mode:"sayit", domain:"craft/reflection-cut",
     prompt:"In one sentence, state why naming what you cut is the strongest move available in a reflection statement.",
@@ -748,7 +756,7 @@ EN.DATA.freeText = [
       "It shows the student edited their work carefully, which markers reward.",
       "It demonstrates that the piece went through several drafts before submission.",
       "It gives the marker more information about the writing process."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-054", mod:"moduleC", mode:"sayit", domain:"craft/selection",
     prompt:"In one sentence, state how voice is created in a first-person piece.",
@@ -761,7 +769,7 @@ EN.DATA.freeText = [
       "By using distinctive vocabulary and sentence structures that suit the character.",
       "Through the narrator's opinions and comments on the events they describe.",
       "By writing in a consistent tone that reflects the narrator's personality."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   /* ═══ Say It In One — second pass, harder ══════════════════ */
   { id:"ft-055", mod:"common", text:"1984", mode:"sayit", domain:"common/dark-promise",
@@ -776,7 +784,7 @@ EN.DATA.freeText = [
       "O'Brien deceives Winston, which shows the Party cannot be trusted about anything.",
       "The phrase is ironic because the Ministry of Love is the darkest place in the novel.",
       "It foreshadows Winston's execution, which takes place in bright daylight at the end."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-056", mod:"common", text:"1984", mode:"sayit", domain:"common/tragedy",
     quote:"1984-q60",
@@ -790,7 +798,7 @@ EN.DATA.freeText = [
       "Winston is mistaken about his era, which shows how thoroughly the Party has misinformed him.",
       "The novel is not a tragedy, since Winston survives and is released at the end.",
       "It shows that tragedy is a universal form that applies to every historical period."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-057", mod:"moduleA", text:"donne", mode:"sayit", domain:"moduleA/corners",
     quote:"donne-q10",
@@ -804,7 +812,7 @@ EN.DATA.freeText = [
       "It shows Donne was familiar with contemporary astronomy and the new cosmology.",
       "It signals that the apocalypse is figurative rather than an expected literal event.",
       "It prepares the volta, where the speaker asks for the summons to be delayed."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-058", mod:"moduleA", text:"wit", mode:"sayit", domain:"moduleA/ashford-ending",
     quote:"wit-q30",
@@ -818,7 +826,7 @@ EN.DATA.freeText = [
       "It elevates Vivian's death by associating her with Shakespeare's tragic protagonist.",
       "It shows Ashford's learning is broader than Donne, unlike Vivian's narrow specialism.",
       "It supplies the religious consolation the Holy Sonnets promised and the hospital could not."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-059", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/elegy-split",
     quote:"h4-q38",
@@ -832,7 +840,7 @@ EN.DATA.freeText = [
       "It shows his elegy is insincere, since he cannot mean both things about the same man.",
       "It demonstrates that Hal honours a defeated enemy as a victorious prince should.",
       "It reveals that Hal admired Hotspur's courage while condemning his rebellion."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-060", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/glendower",
     quote:"h4-q17",
@@ -846,7 +854,7 @@ EN.DATA.freeText = [
       "It shows that the rebels cannot agree among themselves, which the map division suggests.",
       "It establishes Hotspur as the play's most sceptical intelligence and its most modern figure.",
       "Glendower is humiliated and therefore refuses to fight, which is his own failure of nerve."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-061", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/factor",
     quote:"h4-q28",
@@ -860,7 +868,7 @@ EN.DATA.freeText = [
       "It shows Hal regards Hotspur as an employee, which is dismissive of his achievements.",
       "It reveals Hal has been planning to kill Hotspur since the beginning of the play.",
       "It demonstrates Hal's fluency in the mercantile language he learned in the tavern."],
-    threshold:0.62 },
+    threshold:0.50 },
 
   { id:"ft-062", mod:"moduleB", text:"henry4", mode:"sayit", domain:"moduleB/no-closure",
     prompt:"In one sentence, state why the play's lack of closure is a strength.",
@@ -873,5 +881,5 @@ EN.DATA.freeText = [
       "It leaves room for Part 2, which Shakespeare had already begun planning.",
       "It reflects the historical record, in which the Percy rebellion continued for years.",
       "It denies the audience satisfaction, which suits the play's sceptical tone."],
-    threshold:0.62 }
+    threshold:0.50 }
 ];

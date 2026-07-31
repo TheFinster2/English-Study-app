@@ -301,6 +301,19 @@ EN.Mark = (function () {
   /* Words that make a sentence's term order load-bearing. Without one of these,
      two shared terms appearing in a different order usually means nothing. */
   const DIRECTIONAL = /\b(above|over|before|ahead|rather|instead|more|less|greater|beyond|against|than|priorit\w*|prefer\w*|subordinat\w*|outweigh\w*|trumps?|supersed\w*|at the expense of|in place of)\b/;
+  /* A CAUSAL version of this check was written, measured and deleted. The idea was sound
+     — DIRECTIONAL only catches comparative inversions ("X above Y" for "Y above X"), and
+     the commonest student error is causal, swapping what produces what. A clean inversion
+     of an exemplar scores 0.979 cosine and sails straight through.
+
+     But word order does not carry causal direction in English once voice changes. "power
+     works through language" and "language as the instrument through which power reproduces
+     itself" say the SAME thing in opposite orders, and every guard tried (same clause, no
+     comma between, tight spans) still flagged it. On the labelled set the causal rule
+     caught one real inversion and marked one good answer wrong, which is the wrong trade:
+     an inversion that names no technique and states no effect already caps at 2/4 through
+     the rubric, whereas a good answer marked wrong is the complaint this work exists to
+     fix. Left as a comment so the next person measures before re-adding it. */
   const NEGATORS = /\b(not|never|no|none|nothing|cannot|can't|isn't|aren't|doesn't|don't|without|fails? to|refus\w+|denies|deny|lacks?|rejects?|un\w+able)\b/;
 
   function contentTokens(s) {
@@ -351,9 +364,144 @@ EN.Mark = (function () {
      rules in §9 apply uniformly and keeps a cosine score from ever being rendered
      as a mark. */
 
-  const DEFAULT_THRESHOLD = 0.62;
+  const DEFAULT_THRESHOLD = 0.50;
   /** How far below threshold still counts as "close" rather than "not yet". */
-  const CLOSE_BAND = 0.10;
+  const CLOSE_BAND = 0.14;
+
+  /* ── how the mark is built ────────────────────────────────────
+     The original rule was: cosine over threshold or nothing, with any near-miss within
+     0.02 of the best exemplar vetoing the answer outright. Two things were wrong with
+     that, and both showed up as "I gave a decent answer and it was scrapped".
+
+     One: near-misses are TOPICALLY IDENTICAL to the exemplars by construction — they are
+     the same idea read badly. So a good answer sits close to both, and a 0.02 margin
+     rejected answers for being about the right subject. The veto now needs the wrong
+     reading to be clearly nearer (NEAR_MISS_MARGIN), and a strongly-scoring answer
+     survives it as "close" rather than being thrown away.
+
+     Two: a single pass/fail on one number is neither honest nor useful. A student who
+     made the point but never said what the technique does has done something different
+     from one who wrote nothing, and telling them apart is the whole job. So the result
+     carries a mark out of four, built from four NAMED criteria — and three of them are
+     deterministic, so when a mark is lost the app can say exactly why and be right.
+
+       Point    0–2   does it answer the question?      ← the embedding, the only fuzzy part
+       Detail   0–1   is the text actually in it?       ← technique named, or the words quoted
+       Effect   0–1   does it say what that DOES?       ← an analytical verb, not a plot verb
+
+     This is not a cosine dressed up as a mark. Two of the four marks cannot move without
+     the student's words changing in a way you could point at, and the criteria are the
+     ones a marker would use. What is never shown is the similarity number itself (§12).  */
+
+  /* A near-miss must beat the best exemplar by this much before it costs anything.
+     MEASURED, not guessed: at the original 0.02 it fired on four of eight hand-labelled
+     good answers, because a good answer and a bad reading of the same idea share their
+     whole vocabulary. Even at this margin it still fires on some good answers — MiniLM is
+     384 dimensions and cannot always tell them apart — so it now costs ONE MARK rather
+     than the answer. That is the difference between "you have drifted" and "start again". */
+  const NEAR_MISS_MARGIN = 0.045;
+  const MAX_MARK = 4;
+
+  /* Thresholds are lower than they look because cosine punishes length. A longer, more
+     sophisticated answer scores BELOW a short blunt one that reuses the exemplar's shape
+     — on the hand-labelled set the four best answers averaged 0.61 while two merely
+     adequate one-clause answers hit 0.64 and 0.75. Marking on absolute cosine therefore
+     penalises exactly the students who write best, which is why Point is worth two of
+     four marks and not all four, and why the other two are deterministic. */
+
+  /* Verbs that assert an effect on a reader, as opposed to recounting the plot. Shared
+     with the Thesis Forge checks — an analytical sentence almost always contains one. */
+  const EFFECT_VERBS = /\b(position|positions|positioned|construct|constructs|constructed|represent|represents|present|presents|argue|argues|invite|invites|force|forces|forced|expose|exposes|reveal|reveals|suggest|suggests|imply|implies|create|creates|convey|conveys|emphasise|emphasises|emphasize|emphasizes|undercut|undercuts|undermine|undermines|reframe|reframes|withhold|withholds|refuse|refuses|deny|denies|foreclose|forecloses|locate|locates|convert|converts|enact|enacts|complicate|complicates|destabilise|destabilises|unsettle|unsettles|make|makes|leave|leaves|allow|allows|prevent|prevents|demonstrate|demonstrates|signal|signals|frame|frames|cast|casts|render|renders|elevate|elevates|diminish|diminishes|collapse|collapses|equate|equates|subordinate|subordinates)\b/;
+  const PLOT_ONLY = /\b(happens|then he|then she|goes to|talks to|meets|dies at the end|the story is about|this quote is when|is about when|is the part where)\b/;
+
+  /**
+   * Score the two deterministic criteria. Pure Layer A — no model, works on file://.
+   * `spec.quote` / `spec.techniques` / `spec.text` supply what "the text is in it" means;
+   * with none of them present Detail is given, because there is nothing to check against
+   * and marking a student down for a criterion the data cannot express would be a lie.
+   */
+  function craftMarks(response, spec) {
+    const s = spec || {};
+    const raw = String(response || "");
+    const low = " " + U.normalise(raw) + " ";
+    const out = [];
+
+    /* Detail: a technique by name, three consecutive words of the quote, or the
+       composer / title. Any one is enough — this is a check for contact with the text,
+       not a checklist. */
+    let detail = null;
+    const names = [];
+    (s.techniques || []).forEach(id => {
+      if (EN.Bank && EN.Bank.techniqueAlts) names.push.apply(names, EN.Bank.techniqueAlts(id));
+      else names.push(String(id).replace(/-/g, " "));
+    });
+    if (names.some(n => n && low.indexOf(" " + U.normalise(n) + " ") >= 0)) detail = "technique";
+
+    if (!detail && s.quoteText) {
+      const qw = U.normalise(s.quoteText).split(" ").filter(w => w.length > 2);
+      for (let i = 0; i + 2 < qw.length; i++) {
+        if (low.indexOf(" " + qw.slice(i, i + 3).join(" ") + " ") >= 0) { detail = "quoted"; break; }
+      }
+    }
+    if (!detail && s.text && EN.Bank && EN.Bank.text) {
+      const t = EN.Bank.text(s.text) || {};
+      const surname = t.composer ? U.normalise(t.composer).split(" ").pop() : null;
+      const firstTitle = t.title ? U.normalise(t.title).split(" ").filter(w => w.length > 3)[0] : null;
+      if ((surname && low.indexOf(" " + surname) >= 0) ||
+          (firstTitle && low.indexOf(" " + firstTitle) >= 0)) detail = "named";
+    }
+    const checkable = !!(names.length || s.quoteText || s.text);
+    out.push({
+      id: "detail", label: "Anchored in the text", max: 1,
+      got: checkable ? (detail ? 1 : 0) : 1,
+      why: !checkable ? "Nothing to anchor to on this prompt, so this mark is given."
+         : detail === "technique" ? "You named the technique."
+         : detail === "quoted" ? "You quoted the words."
+         : detail === "named" ? "You named the text or its composer."
+         : "Name the technique, or quote three words of it. An analysis with no text in it is a general remark."
+    });
+
+    /* Effect: does the sentence claim the text DOES something? */
+    const hasEffect = EFFECT_VERBS.test(low) && !PLOT_ONLY.test(low);
+    out.push({
+      id: "effect", label: "Says what it does", max: 1, got: hasEffect ? 1 : 0,
+      why: hasEffect ? "You said what the choice does, not just what it is."
+         : PLOT_ONLY.test(low)
+           ? "This retells rather than analyses. Say what the choice does to a reader."
+           : "Add the effect — what does this position, force, expose or withhold?"
+    });
+    return out;
+  }
+
+  /** Assemble the mark out of four from the embedding score plus the craft marks. */
+  function buildMarks(response, spec, best, threshold) {
+    const point = best >= threshold ? 2
+                : best >= threshold - CLOSE_BAND ? 1
+                : 0;
+    const marks = [{
+      id: "point", label: "Answers the question", max: 2, got: point,
+      why: point === 2 ? "You made the point the question asked for."
+         : point === 1 ? "You are near the point but not on it — compare the model answers."
+                       : "This is not yet answering what was asked. Read the model answers."
+    }].concat(craftMarks(response, spec));
+    return capped(marks);
+  }
+
+  /**
+   * Total the marks, with Point acting as a gate.
+   *
+   * A marker does not give 2/4 to a fluent, well-anchored answer to a different question,
+   * and neither should this: naming the technique and stating an effect are worth nothing
+   * if the claim itself is wrong. So a Point of 0 caps the total at 1. Without the cap a
+   * response that named any technique in the quote and used any analytical verb scored
+   * "close" while saying something untrue — measured on a deliberately thin answer.
+   */
+  function capped(marks) {
+    const point = (marks.find(m => m.id === "point") || { got: 0 }).got;
+    const raw = marks.reduce((n, m) => n + m.got, 0);
+    const total = point === 0 ? Math.min(raw, 1) : raw;
+    return { marks, total, outOf: MAX_MARK, gated: point === 0 && raw > 1 };
+  }
 
   /**
    * Mark a typed response.
@@ -382,6 +530,7 @@ EN.Mark = (function () {
 
     if (!raw) {
       return { verdict: "notYet", score: 0, layer: s.layer || "C", flags: ["empty"],
+               total: 0, outOf: MAX_MARK,
                feedback: "Nothing typed yet.", exemplars: answers };
     }
 
@@ -392,6 +541,7 @@ EN.Mark = (function () {
       return {
         verdict: f.ok ? "nailed" : "notYet",
         score: f.ratio, layer: "B", flags: f.reason === "scope" ? ["scope"] : [],
+        total: f.ok ? 1 : 0, outOf: 1,
         feedback: f.ok
           ? (f.ratio < 1 ? "Right — spelling was a little off." : "Exactly right.")
           : "Not the word.",
@@ -434,39 +584,72 @@ EN.Mark = (function () {
     const flags = [];
     const closest = bestAt >= 0 ? answers[bestAt] : answers[0] || "";
 
-    /* The contrastive rule. An answer nearer a wrong reading than a right one is
-       marked wrong regardless of how well it scores in absolute terms — this is what
-       stops a confident inversion of the right answer from passing. */
-    if (worstAt >= 0 && worst >= best - 0.02) {
+    const scored = buildMarks(raw, s, best, threshold);
+    let { marks, total } = scored;
+    let note = null;
+
+    /* The contrastive rule, with a real margin. A near-miss is the SAME IDEA read badly,
+       so it sits close to the exemplars by design — requiring only that it tie was
+       rejecting answers for being about the right subject. It now has to be clearly
+       nearer, and an answer that is itself strong keeps its Point mark and loses the
+       benefit of the doubt instead of the whole response. */
+    if (worstAt >= 0 && worst >= best + NEAR_MISS_MARGIN) {
       flags.push("nearMiss");
-      return { verdict: "notYet", score: best, layer: "C", flags,
-               feedback: "That lands closer to a misreading than to the point. Compare it with these:",
-               exemplars: answers, matched: nearMiss[worstAt] };
+      /* If the answer cleared the bar against a model answer on its own merits, a wrong
+         reading scoring incidentally higher is 384-dimensional noise, not evidence. Say so
+         and cost nothing. The protection against a genuine inversion is the DETERMINISTIC
+         backstop below, which does not depend on the embedding at all. */
+      if (best >= threshold) {
+        note = "Marked right — but parts of this read like a common misreading, so check yours against the model answers.";
+      } else {
+      marks = marks.map(m => m.id === "point"
+        ? Object.assign({}, m, { got: Math.max(0, m.got - 1),
+            why: m.got >= 2 ? "Close, but this drifts toward a common misreading of the same idea."
+                            : "This lands nearer a misreading than the point. Compare it with the model answers." })
+        : m);
+      ({ marks, total } = capped(marks));
+      if (total <= 1) note = "That lands closer to a misreading than to the point.";
+      }
     }
 
-    /* The deterministic backstop, applied on top of the exemplar closest to the
-       student's answer. Flagged regardless of cosine, per §6.5.4. */
+    /* The deterministic backstops, applied on top of the exemplar closest to the
+       student's answer. Flagged regardless of cosine, per §6.5.4. A reversal is a real
+       error and costs the Point marks — but the Detail and Effect marks are honestly
+       earned and are not confiscated, because the student did name the technique. */
     if (reversed(raw, closest)) {
       flags.push("reversed");
-      return { verdict: "notYet", score: best, layer: "C", flags,
-               feedback: "The pieces are right but the direction looks inverted — check which term you've put above which.",
-               exemplars: answers };
+      marks = marks.map(m => m.id === "point"
+        ? Object.assign({}, m, { got: 0,
+            why: "The pieces are right but the direction is inverted — check which term you have put above which." })
+        : m);
+      ({ marks, total } = capped(marks));
+      note = "The pieces are right but the direction looks inverted.";
+    } else if (negationMismatch(raw, closest)) {
+      flags.push("negation");
+      /* A negation asymmetry with an otherwise passing score is the shape of an accidental
+         inversion, so it costs a mark rather than the answer. */
+      marks = marks.map(m => m.id === "point" && m.got === 2
+        ? Object.assign({}, m, { got: 1,
+            why: "One of you is negating and the other isn't — check whether you meant the opposite." })
+        : m);
+      ({ marks, total } = capped(marks));
     }
-    if (negationMismatch(raw, closest)) flags.push("negation");
 
-    let verdict = best >= threshold ? "nailed"
-                : best >= threshold - CLOSE_BAND ? "close"
-                : "notYet";
-
-    /* A negation asymmetry with an otherwise passing score is exactly the shape of an
-       accidental inversion, so it costs the top verdict but not the whole answer. */
-    if (verdict === "nailed" && flags.includes("negation")) verdict = "close";
+    /* The verdict is now a summary of the mark, not a separate judgement. Three of four
+       is a good answer with one thing missing, and it says so. */
+    const pointGot = (marks.find(m => m.id === "point") || { got: 0 }).got;
+    const verdict = total >= 4 ? "nailed" : (pointGot >= 1 && total >= 2) ? "close" : "notYet";
+    const missing = marks.filter(m => m.got < m.max);
 
     return {
       verdict, score: best, layer: "C", flags,
-      feedback: verdict === "nailed" ? "That's the move. Here's how others put it:"
-              : verdict === "close"  ? "You're circling it. Look at what these do differently:"
-                                     : "Not yet — read these and try again tomorrow:",
+      marks, total, outOf: MAX_MARK,
+      feedback: note ? note
+              : total === 4 ? "Full marks. Here's how others put it:"
+              : total === 3 ? "Three out of four — one thing short: " + missing[0].label.toLowerCase() + "."
+              : total === 2 ? "Halfway. You're circling it — look at what these do differently:"
+              : total === 1 ? "One mark. Read these and see what they do that yours doesn't:"
+                            : "Not yet. Read these and try again tomorrow:",
       exemplars: answers
     };
   }
@@ -485,6 +668,8 @@ EN.Mark = (function () {
     embed, cosine, load, ready, available, blockedReason,
     downloadModel, downloadProgress, isDownloaded,
     reversed, negationMismatch,
-    MODEL_CACHE, MODEL_FILES, MODEL_BYTES, FUZZY_THRESHOLD, DEFAULT_THRESHOLD, CLOSE_BAND
+    craftMarks, buildMarks, capped,
+    MODEL_CACHE, MODEL_FILES, MODEL_BYTES, FUZZY_THRESHOLD, DEFAULT_THRESHOLD, CLOSE_BAND,
+    MAX_MARK, NEAR_MISS_MARGIN, EFFECT_VERBS
   };
 })();

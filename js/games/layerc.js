@@ -83,6 +83,7 @@ EN.Games.layerc = (function () {
     EN.Sound.gameStart();
 
     let idx = 0, nailed = 0, closeN = 0, xp = 0, coins = 0, paid = 0, finished = false;
+    let marksGot = 0, marksMax = 0;
     const shell = UI.gameShell(c.title, { confirmExit: true });
     root.appendChild(shell.root);
     const progChip = UI.chip("1 / " + items.length);
@@ -205,9 +206,15 @@ EN.Games.layerc = (function () {
            contrastive rule catches "changed three words" with no extra authoring. */
         const nearMiss = (p.nearMiss || []).concat(p.weak ? [p.weak] : []);
 
+        /* techniques/quoteText/text feed the two DETERMINISTIC marks — "is the text
+           actually in it" and "does it say what that does". Without them Mark.check
+           gives the Detail mark rather than penalising a criterion the data cannot
+           express, so passing them is what makes the mark meaningful. */
+        const q = p.quote ? EN.Bank.quoteById(p.quote) : null;
         const res = await EN.Mark.check(ta.value, {
           layer: "C", answers: p.answers, nearMiss,
-          prompt: p.prompt, threshold: p.threshold, domain: p.domain
+          prompt: p.prompt, threshold: p.threshold, domain: p.domain,
+          text: p.text, techniques: q ? q.techniques : null, quoteText: q ? q.text : null
         });
 
         submit.remove();
@@ -227,16 +234,39 @@ EN.Games.layerc = (function () {
         if (res.verdict !== "unavailable" && elig.ok) {
           S.markFreeText(p.id, ta.value);
           paid++;
-          gain = res.verdict === "nailed" ? 18 : res.verdict === "close" ? 8 : 0;
+          /* Per mark rather than per verdict, so three out of four is worth more than two
+             and a decent answer is never worth nothing. Still capped at 18 — the ceiling
+             is what keeps a similarity threshold from outpaying a determinate answer. */
+          gain = [0, 4, 8, 13, 18][res.total || 0];
+          marksGot += res.total || 0;
+          marksMax += res.outOf || 4;
           xp += gain;
-          coins += res.verdict === "nailed" ? 3 : 0;
+          coins += (res.total || 0) >= 4 ? 3 : (res.total || 0) === 3 ? 1 : 0;
           scoreChip.textContent = xp + " XP";
           if (gain) EN.FX.marked(window.innerWidth / 2, window.innerHeight * 0.4);
         }
 
         const box = U.el("div", { class: "lc-verdict " + res.verdict }, [
-          U.el("div", { class: "lc-word", text: VERDICT_WORD[res.verdict] }),
+          U.el("div", { class: "lc-head" }, [
+            U.el("div", { class: "lc-word", text: VERDICT_WORD[res.verdict] }),
+            res.verdict !== "unavailable"
+              ? U.el("div", { class: "lc-mark", title: "Three of these four marks are deterministic" }, [
+                  U.el("b", { text: String(res.total) }),
+                  U.el("span", { text: "/" + res.outOf })
+                ]) : null
+          ]),
           U.el("p", { text: res.feedback }),
+          /* The criteria, itemised. This is the point of the mark: when a mark is lost the
+             student is told which criterion and why, and for two of the three that reason
+             is a fact about their words rather than a similarity score. */
+          res.marks ? U.el("div", { class: "lc-criteria" },
+            res.marks.map(m => U.el("div", { class: "lc-crit" + (m.got === m.max ? " full" : m.got ? " part" : "") }, [
+              U.el("span", { class: "lc-crit-mark", text: m.got + "/" + m.max }),
+              U.el("span", { class: "lc-crit-body" }, [
+                U.el("b", { text: m.label }),
+                U.el("div", { class: "tiny muted", text: m.why })
+              ])
+            ]))) : null,
           res.flags.includes("reversed")
             ? U.el("div", { class: "lc-flag", text: "⇄ Direction check — the terms look inverted." }) : null,
           res.flags.includes("negation")
@@ -292,7 +322,8 @@ EN.Games.layerc = (function () {
         title: c.title.replace(/^\S+\s/, "") + " complete",
         correct: nailed, total: items.length, xp: got.xp, coins: got.coins, newBest,
         scoreLabel: "Nailed",
-        extraStats: [["Close", closeN], ["Scored", paid + "/" + items.length]],
+        extraStats: [["Marks", marksMax ? marksGot + "/" + marksMax : "—"],
+                     ["Close", closeN], ["Scored", paid + "/" + items.length]],
         note: "Sentence marking pays less than the structural modes on purpose — a similarity threshold is softer than a right answer.",
         gate: true, gateLabel: "See your results ↑",
         onAgain: () => UI.handleRoute()
