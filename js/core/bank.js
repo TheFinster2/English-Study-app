@@ -34,9 +34,11 @@ EN.Bank = (function () {
 
   /* ── texts ────────────────────────────────────────────────── */
 
-  /** The text ids in the student's manifest, flattened. Module A contributes two. */
+  /** The text ids in the student's manifest, flattened. Module A contributes two.
+      Read through State so the in-app picker works; EN.DATA.activeTexts is the default
+      it falls back to. */
   function activeTextIds() {
-    const a = EN.DATA.activeTexts;
+    const a = EN.State.activeTexts();
     return [a.common].concat(a.moduleA || [], [a.moduleB, a.moduleC])
       .filter(Boolean)
       .filter(id => EN.DATA.texts[id]);
@@ -48,7 +50,7 @@ EN.Bank = (function () {
 
   /** Which module slot a text currently occupies, or null if it is not active. */
   function slotOf(textId) {
-    const a = EN.DATA.activeTexts;
+    const a = EN.State.activeTexts();
     if (a.common === textId) return "common";
     if ((a.moduleA || []).includes(textId)) return "moduleA";
     if (a.moduleB === textId) return "moduleB";
@@ -67,7 +69,12 @@ EN.Bank = (function () {
       QUOTES = [];
       for (const id of activeTextIds()) {
         const t = EN.DATA.texts[id];
-        for (const q of (t.quotes || [])) QUOTES.push(withSpan(q, t));
+        /* A poem the student is not studying contributes nothing to the Vault, the
+           adaptive draw or any game — Donne is fifty-four poems and no course does all
+           of them, so an unfiltered pool would drill quotes they have never read. */
+        for (const q of (t.quotes || [])) {
+          if (EN.State.poemEnabled(t.id, q.poem)) QUOTES.push(withSpan(q, t));
+        }
       }
     }
     return QUOTES;
@@ -94,6 +101,15 @@ EN.Bank = (function () {
   }
 
   let QUOTE_INDEX = null;
+
+  /** Drop every memoised pool. Called whenever the manifest or poem selection changes —
+      without it the picker appears to do nothing until the next reload. */
+  function invalidate() {
+    QUOTES = null;
+    ALL_QUOTES = null;
+    QUOTE_INDEX = null;
+  }
+
   function quoteById(id) {
     if (!QUOTE_INDEX) QUOTE_INDEX = new Map(allQuotes().map(q => [q.id, q]));
     return QUOTE_INDEX.get(id);
@@ -252,7 +268,7 @@ EN.Bank = (function () {
     });
   }
 
-  return { all, byId, discover,
+  return { all, byId, discover, invalidate,
            MODULES, moduleName, moduleLabel,
            activeTexts, activeTextIds, allTexts, text, slotOf,
            quotes, allQuotes, quoteById, filterQuotes,

@@ -46,10 +46,15 @@ EN.Screens.home = function (view) {
 
   /* This student's four texts. The manifest is the app's whole architecture, so it is
      visible on the home screen rather than buried in settings. */
-  view.appendChild(U.el("h2", { text: "Your texts" }));
+  view.appendChild(U.el("div", { class: "row", style: "margin:26px 0 12px" }, [
+    U.el("h2", { text: "Your texts", style: "margin:0" }),
+    U.el("div", { class: "spacer" }),
+    U.el("button", { class: "btn btn-ghost btn-sm", text: "Change",
+                     on: { click: () => UI.go("/texts") } })
+  ]));
   const slots = U.el("div", { class: "card" });
   EN.DATA.modules.forEach(m => {
-    const a = EN.DATA.activeTexts[m.id];
+    const a = S.activeTexts()[m.id];
     const ids = [].concat(a || []);
     ids.filter(Boolean).forEach(id => {
       const t = EN.Bank.text(id);
@@ -66,6 +71,10 @@ EN.Screens.home = function (view) {
       ]));
     });
   });
+  if (!slots.childNodes.length) {
+    slots.appendChild(U.el("div", { class: "tiny muted",
+      text: "No texts chosen yet — pick what your class studies and the whole app follows." }));
+  }
   view.appendChild(slots);
 
   view.appendChild(U.el("h2", { text: "Mastery" }));

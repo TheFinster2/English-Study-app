@@ -83,7 +83,7 @@ EN.UI = (function () {
     if (typeof result === "function") currentCleanup = result;
 
     const navKey = ({ play: "play", game: "play", boss: "play",
-                      reference: "vault", draft: "vault" })[name] || name;
+                      reference: "vault", draft: "vault", texts: "vault" })[name] || name;
     U.$$(".nav-item").forEach(a => a.classList.toggle("on", a.dataset.nav === navKey));
 
     window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });

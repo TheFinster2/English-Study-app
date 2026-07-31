@@ -91,6 +91,7 @@ const PRECACHE = [
   "js/screens/progress.js",
   "js/screens/shop.js",
   "js/screens/draft.js",
+  "js/screens/texts.js",
   "js/screens/misc.js",
   "js/app.js",
 

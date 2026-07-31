@@ -51,6 +51,7 @@ EN.BUILD = "1.0.0";
   UI.route("shop", EN.Screens.shop);
   UI.route("arcade", EN.Arcade.screen);
   UI.route("draft", EN.Screens.draft.screen);
+  UI.route("texts", EN.Screens.texts.screen);
   UI.route("settings", EN.Screens.misc.settings);
   UI.route("achievements", EN.Screens.misc.achievements);
   UI.route("boss", EN.Games.boss.start);

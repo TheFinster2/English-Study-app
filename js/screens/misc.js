@@ -64,6 +64,21 @@ EN.Screens.misc = (function () {
     ]);
     view.appendChild(av);
 
+    /* ── the manifest ── */
+    view.appendChild(U.el("h2", { text: "Your texts" }));
+    view.appendChild(U.el("div", { class: "card" }, [
+      U.el("div", { class: "row" }, [
+        U.el("span", { style: "font-size:20px", text: "📚" }),
+        U.el("div", { style: "flex:1; min-width:0" }, [
+          U.el("b", { text: activeSummary() }),
+          U.el("div", { class: "tiny muted",
+            text: "Everything the app drills follows this. A text with a poem selection — Donne is fifty-four poems — can be narrowed to the ones your class set." })
+        ]),
+        U.el("button", { class: "btn btn-primary btn-sm", text: "Change",
+                         on: { click: () => UI.go("/texts") } })
+      ])
+    ]));
+
     /* ── themes shortcut ── */
     view.appendChild(U.el("div", { class: "card" }, [
       U.el("div", { class: "row" }, [
@@ -159,6 +174,13 @@ EN.Screens.misc = (function () {
         ])
       ]);
     }
+  }
+
+  function activeSummary() {
+    const t = EN.Bank.activeTexts();
+    if (!t.length) return "No texts chosen yet";
+    return t.length + " text" + (t.length === 1 ? "" : "s") + " · " +
+           EN.Bank.quotes().length + " quotes in play";
   }
 
   const themeName = id => (EN.DATA.themes.find(t => t.id === id) || { name: id }).name;

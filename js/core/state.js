@@ -47,7 +47,19 @@ EN.State = (function () {
        text needs guards a multiple-choice question does not — see §9.8 and `freeText`
        below. */
     freeText: { day: null, scored: {}, hashes: {} },
-    drafts: []            // Draft Desk contents. Exported with the save; earns nothing.
+    drafts: [],           // Draft Desk contents. Exported with the save; earns nothing.
+    /* ── THIS STUDENT'S TEXTS ───────────────────────────────────────────────────
+       `null` means "whatever js/data/texts.js says", so the file default keeps working
+       and a fresh install is not empty. Once the student picks their own in Settings
+       this holds the override, and the file is never edited again.
+
+       `poems` is the same idea one level down. A Donne selection is not a text — no two
+       courses cut the fifty-four poems the same way — so a text may carry a `poems`
+       array and this records which of them the student is actually studying. An absent
+       entry means "use each poem's `core` flag", so adding a poem to the data file later
+       does not silently switch it on inside somebody's Vault. */
+    manifest: null,       // { common, moduleA:[a,b], moduleB, moduleC } or null
+    poems: {}             // { donne: ["hs10","hs14", …] } — enabled ids, per text
   });
 
   let data = DEFAULT();
@@ -559,8 +571,79 @@ EN.State = (function () {
     emit();
   }
 
+  /* ── the text manifest ─────────────────────────────────────
+     Read through here, never straight off EN.DATA.activeTexts, so a student can change
+     their texts in Settings without editing a file. Bank.invalidate() must be called
+     after any write — the quote pool is memoised and would otherwise still hold the old
+     selection until a reload. */
+  function activeTexts() {
+    const m = data.manifest;
+    if (!m) return EN.DATA.activeTexts;
+    return {
+      common:  m.common  || null,
+      moduleA: (m.moduleA || []).slice(0, 2),
+      moduleB: m.moduleB || null,
+      moduleC: m.moduleC || null
+    };
+  }
+
+  /** Set one module slot. `value` is an id, an array of two for Module A, or null. */
+  function setSlot(mod, value) {
+    const cur = activeTexts();
+    const next = {
+      common: cur.common, moduleA: [].concat(cur.moduleA || []).filter(Boolean),
+      moduleB: cur.moduleB, moduleC: cur.moduleC
+    };
+    if (mod === "moduleA") next.moduleA = [].concat(value || []).filter(Boolean).slice(0, 2);
+    else next[mod] = value || null;
+    data.manifest = next;
+    save();
+    if (EN.Bank) EN.Bank.invalidate();
+    emit();
+    return next;
+  }
+
+  /* ── poem selection ───────────────────────────────────────── */
+
+  /** The poem ids in play for a text. Null if the text has no poem breakdown. */
+  function enabledPoems(textId) {
+    const t = EN.DATA.texts[textId];
+    if (!t || !t.poems || !t.poems.length) return null;
+    const saved = (data.poems || {})[textId];
+    if (Array.isArray(saved)) {
+      /* Filter against the file, so a poem removed from the data file cannot linger in a
+         save and leave the student with an id that resolves to nothing. */
+      const known = new Set(t.poems.map(p => p.id));
+      return saved.filter(id => known.has(id));
+    }
+    return t.poems.filter(p => p.core).map(p => p.id);
+  }
+
+  /** Is this quote's poem in play? Quotes with no `poem` tag always are. */
+  function poemEnabled(textId, poemId) {
+    if (!poemId) return true;
+    const on = enabledPoems(textId);
+    return on === null ? true : on.includes(poemId);
+  }
+
+  function setPoems(textId, ids) {
+    (data.poems || (data.poems = {}))[textId] = [].concat(ids || []);
+    save();
+    if (EN.Bank) EN.Bank.invalidate();
+    emit();
+  }
+
+  /** Reset a text's poem selection to the file's `core` flags. */
+  function resetPoems(textId) {
+    if (data.poems) delete data.poems[textId];
+    save();
+    if (EN.Bank) EN.Bank.invalidate();
+    emit();
+  }
+
   return {
     load, save, flush, replaceSave, onChange, emit,
+    activeTexts, setSlot, enabledPoems, poemEnabled, setPoems, resetPoems,
     get data() { return data; },
     xpNeeded, levelTitle, addXP, addCoins, spendCoins, MAX_LEVEL,
     difficulty, xpMultiplier, canPrestige, doPrestige, masteryTier,

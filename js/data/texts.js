@@ -4,10 +4,15 @@
    the Common Module text. So the core of this app is text-agnostic and everything
    text-specific filters through `EN.DATA.activeTexts` below.
 
-   Swapping a text is a ONE-FILE EDIT — change an id here, and every game mode, the
-   Quote Vault, the adaptive draw and the progress screen follow. tests/validate.js
-   asserts that every question in the bank references a text present in this manifest,
-   which is the check that stops the app breaking when the swap happens.
+   Swapping a text is done IN THE APP — Settings → Your texts. The four slots below are
+   only the default for a fresh install; State.activeTexts() is what the app reads, and
+   it prefers the student's own selection. tests/validate.js asserts that every question
+   in the bank references a text that ships, which is the check that stops the app
+   breaking when the swap happens.
+
+   A text may also declare a `poems` array (see donne.js). Donne is not one work but a
+   selection of fifty-four poems and no two courses cut them the same way, so poems are
+   individually switchable and each carries a `core` flag marking the commonly-set ones.
 
    Add your own text by dropping a file into js/data/texts/ (copy the shape of
    nineteen-eighty-four.js), adding it to index.html + sw.js, and naming it here.
@@ -35,8 +40,13 @@ EN.DATA.modules = [
     concept: "deliberate craft — the choices a writer makes and can account for" }
 ];
 
-/* ── THIS STUDENT'S TEXTS ────────────────────────────────────────────────────
-   Edit these four lines to change what the whole app drills. */
+/* ── THE DEFAULT TEXTS ───────────────────────────────────────────────────────
+   The starting point, not the mandate. A student picks their own in the app
+   (Settings → Your texts, or the Change button on the home screen), which writes an
+   override into the save file and leaves this alone. State.activeTexts() merges the two
+   and everything reads through there — nothing in the app touches this object directly.
+
+   Editing these four lines still works and changes the default for a fresh install. */
 EN.DATA.activeTexts = {
   common:  "1984",
   moduleA: ["donne", "wit"],        // Module A is always a pair

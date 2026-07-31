@@ -891,3 +891,9 @@ ul.tight li{ font-size:13px; line-height:1.6; color:var(--ink-dim); margin-botto
   .verse{ padding:12px 10px; }
   .vnum{ width:20px; }
 }
+
+/* ---------- the text / poem picker ---------- */
+.poem-row{ align-items:center; }
+/* An opening line is the fastest way to recognise a poem, so it is shown rather than
+   just the title — but it must wrap, not stretch the row (§9.2). */
+.poem-open{ font-style:italic; overflow-wrap:break-word; }

@@ -117,7 +117,7 @@ EN.Games.boss = (function () {
        pairs explicitly rather than hoping the draw alternates. */
     let pairPool = null;
     if (boss.gimmick === "pair") {
-      const [t1, t2] = EN.DATA.activeTexts.moduleA || [];
+      const [t1, t2] = EN.State.activeTexts().moduleA || [];
       const a = EN.Bank.draw(boss.hp + 4, { texts: [t1] });
       const b = EN.Bank.draw(boss.hp + 4, { texts: [t2] });
       if (a.length && b.length) {
