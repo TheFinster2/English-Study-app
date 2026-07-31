@@ -124,9 +124,34 @@ EN.Games.layerc = (function () {
       banner.appendChild(U.el("div", { class: "lc-verdict unavailable" }, [
         U.el("div", { class: "lc-word", text: "Marking unavailable" }),
         U.el("p", { class: "tiny", text: msg }),
+        /* Opens the download panel in a MODAL rather than navigating to Settings.
+           Going to Settings threw the run away — a student who tapped this while
+           part-way through lost every answer they had given and came back to a fresh
+           run, which reads exactly like being kicked out of the app. The panel is the
+           same one Settings renders, so there is one download flow, not two. */
         modelState === "notDownloaded"
-          ? U.el("button", { class: "btn btn-sm btn-primary", text: "Go to Settings",
-                             on: { click: () => UI.go("/settings") } })
+          ? U.el("button", { class: "btn btn-sm btn-primary", text: "⬇ Turn on sentence marking",
+              on: { click: () => {
+                UI.modal(U.el("div", {}, [
+                  U.el("h2", { text: "Sentence marking" }),
+                  U.el("p", { class: "tiny muted",
+                    text: "Download it here and this run carries on — nothing you have already answered is lost." }),
+                  EN.Screens.misc.layerCPanel(),
+                  U.el("button", { class: "btn btn-ghost btn-block", style: "margin-top:12px",
+                    text: "Back to the run", on: { click: () => {
+                      UI.closeModal();
+                      /* Re-check on the way out, so a download that finished inside the
+                         modal takes effect for the rest of THIS run. */
+                      if (EN.Mark.available()) {
+                        EN.Mark.isDownloaded().then(has => {
+                          if (!has) return;
+                          modelState = "loading"; refreshBanner();
+                          EN.Mark.load().then(ok => { modelState = ok ? "ready" : "failed"; refreshBanner(); });
+                        });
+                      }
+                    } } })
+                ]));
+              } } })
           : null
       ]));
     }
