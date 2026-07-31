@@ -941,3 +941,24 @@ h2.ea-pool-head.spent{ display:none; }
    silent: a timer that has stopped without saying so looks like a timer that has broken. */
 .timer-ring.paused{ opacity:.55; border-style:dashed; animation:none; }
 .timer-ring.paused::after{ content:" ⏸"; font-size:10px; }
+
+/* The Marking Desk's submit, same treatment and same reason as .ea-actions.stuck. */
+.md-actions{ margin-top:14px; }
+.md-actions.stuck{
+  position:sticky; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 78px);
+  z-index:68; padding:10px 12px; border-radius:16px; border:1px solid var(--line);
+  background:color-mix(in srgb,var(--bg-1) 92%,transparent);
+  backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+
+/* Layer C's submit. Same as .ea-actions.stuck and .md-actions.stuck — three modes, one
+   bug: a primary action at the foot of a long form ends up under the floating nav bar. */
+.lc-actions{ margin-top:14px; }
+.lc-actions.stuck{
+  position:sticky; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 78px);
+  z-index:68; padding:10px 12px; border-radius:16px; border:1px solid var(--line);
+  background:color-mix(in srgb,var(--bg-1) 92%,transparent);
+  backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}

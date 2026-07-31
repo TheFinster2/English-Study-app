@@ -170,21 +170,30 @@ EN.Games.marking = (function () {
       });
       wrap.appendChild(descWrap);
 
+      /* Sticky once it can be pressed, for the same reason as the Essay Architect: this
+         screen is a 130-word paragraph, a band row and five descriptor buttons, so on a
+         phone "Mark it" is well below the fold at the moment it becomes usable. */
+      const submitBar = U.el("div", { class: "md-actions" });
       const submit = U.el("button", { class: "btn btn-primary btn-block js-submit",
                                       text: "Mark it", disabled: true });
-      wrap.appendChild(submit);
+      submitBar.appendChild(submit);
+      wrap.appendChild(submitBar);
       stage.appendChild(wrap);
 
       shownAt = performance.now();
       // Reading a 130-word paragraph carefully is the whole task, so the floor is real.
       minRead = UI.readTimeFor(p.para);
 
-      function sync() { submit.disabled = chosenBand === null; }
+      function sync() {
+        const ready = chosenBand !== null && !revealed;
+        submit.disabled = !ready;
+        submitBar.classList.toggle("stuck", ready);
+      }
 
       submit.addEventListener("click", () => {
         if (chosenBand === null || revealed) return;
         revealed = true;
-        submit.remove();
+        submitBar.remove();
 
         const tooFast = performance.now() - shownAt < minRead;
         const distance = Math.abs(chosenBand - p.band);

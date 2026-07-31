@@ -177,16 +177,24 @@ EN.Games.layerc = (function () {
 
       const counter = U.el("div", { class: "input-hint", text: "0 words" });
       card.appendChild(counter);
+      const submitBar = U.el("div", { class: "lc-actions" });
       ta.addEventListener("input", () => {
         counter.textContent = U.words(ta.value) + " words";
         EN.Sound.type();
         refreshLive();
-        submit.disabled = U.words(ta.value) < 4;
+        const ready = U.words(ta.value) >= 4 && !submitted;
+        submit.disabled = !ready;
+        submitBar.classList.toggle("stuck", ready);
       });
 
+      /* Sticky once there is something to mark. At 360px this button landed underneath
+         the floating nav bar — enabled, on screen, and untappable, because the nav is
+         centred and covers the middle of the row. Same treatment as the Essay Architect
+         and the Marking Desk. */
       const submit = U.el("button", { class: "btn btn-primary btn-block js-submit",
-                                      text: "Mark my sentence", disabled: true, style: "margin-top:14px" });
-      card.appendChild(submit);
+                                      text: "Mark my sentence", disabled: true });
+      submitBar.appendChild(submit);
+      card.appendChild(submitBar);
       stage.appendChild(card);
       ta.focus();
 
@@ -231,7 +239,7 @@ EN.Games.layerc = (function () {
         }
         if (!res.flags) res.flags = [];
 
-        submit.remove();
+        submitBar.remove();
         S.bump("sentencesMarked");
         if (res.verdict === "nailed") { nailed++; S.bump("sentencesNailed"); EN.Sound.nailed(); }
         else if (res.verdict === "close") { closeN++; EN.Sound.circling(); }
