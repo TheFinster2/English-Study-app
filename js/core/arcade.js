@@ -155,8 +155,13 @@ EN.Arcade = (function () {
     };
   }
 
-  /** Game over panel. Records a high score and NOTHING else. */
-  function over(host, cfg, value) {
+  /**
+   * Game over panel. Records a high score and NOTHING else.
+   * `extra` is optional [[label, value], …] a game wants shown beside the score — Letter
+   * Crush reports words spelled and best cascade, which is the only place those numbers
+   * exist. Still no XP, no Marks, no achievement check.
+   */
+  function over(host, cfg, value, extra) {
     host.stop();
     const isBest = score(cfg.arcadeId, value);
     EN.Sound.lose();
@@ -176,7 +181,11 @@ EN.Arcade = (function () {
           U.el("div", { class: "result-num", text: U.fmtTime(remaining(cfg.arcadeId)) }),
           U.el("div", { class: "result-lbl", text: "Time left" })
         ])
-      ]),
+      ].concat([].concat(extra || []).map(([lbl, val]) =>
+        U.el("div", { class: "result-cell" }, [
+          U.el("div", { class: "result-num", text: String(val) }),
+          U.el("div", { class: "result-lbl", text: lbl })
+        ])))),
       isBest ? U.el("div", { class: "chip on", text: "🏆 New high score" }) : null,
       U.el("p", { class: "tiny muted", text: "No XP and no Marks — the arcade never pays. Back to the Vault when you're ready." }),
       U.el("div", { class: "row", style: "margin-top:8px" }, [

@@ -55,8 +55,10 @@ EN.DATA.shop = {
    the reference app nearly shipped exactly that. */
 EN.DATA.arcade = [
   { id:"lettercrush", name:"Letter Crush", icon:"🔤", colour:"#e0574a",
-    desc:"Match three letter tiles. Longer runs charge the tile.",
-    blurb:"8×8, gravity, combos. No XP, no Marks — just a number." },
+    desc:"Match letter tiles and spell the word you are given.",
+    blurb:"8×8 with gravity, cascades and three specials that combine. There is always a " +
+          "word to fill — SATIRE, ARTIST, STRAIT — and clearing a letter it wants fills a " +
+          "slot. No XP, no Marks, no achievements: just a number and a word count." },
   { id:"marginrunner", name:"Margin Runner", icon:"🏃", colour:"#4a90c2",
     desc:"Endless runner down the margin of a page. Jump the footnotes.",
     blurb:"Canvas, one button, increasing speed. Earns you nothing at all." },

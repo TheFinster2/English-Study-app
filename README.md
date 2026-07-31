@@ -133,7 +133,9 @@ line in this app that matters most.
   concepts, essay architecture, per-text quote sheets
 - **The Draft Desk** — somewhere to write, with a word count, an exam clock and export to
   a file. No XP, no Marks, no marking, no one reading over your shoulder
-- **The Arcade** — three games rented with Marks that pay **nothing but a high score**
+- **The Arcade** — three games rented with Marks that pay **nothing but a high score**.
+  Letter Crush is a match-3 with gravity, cascades and three specials that combine, and it
+  always has a word to fill — SATIRE, ARTIST, STRAIT — from the six letters its tiles use
 
 403 multiple-choice questions, each with a worked explanation. 60 band-tagged paragraphs.
 62 free-text prompts with model answers and near-misses. 14 essay puzzles, 42 topic
@@ -207,6 +209,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `marking` | browser | the marking stack ranks answers the way a marker would |
 | `a11y` | browser | keyboard play, dialog semantics, and what gets announced |
 | `calibrate` | browser | run the 49 hand-labelled responses; report where the app and a marker disagree |
+| `arcade` | browser | the arcade plays, and pays nothing |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -234,6 +237,11 @@ Every assertion in here exists because something was actually wrong:
   set separates cleanly: mean mark 3.21 good, 2.54 decent, 1.78 thin, 1.23 wrong. The suite
   prints its disagreements, because the point of a calibration run is to tell you which
   number to move.
+- `arcade` — plays 45 real moves of Letter Crush from the DOM (not from the game's own
+  model, so a board that *drew* wrong would still fail), then checks the ledger: tens of
+  thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
+  guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
+  never a dead board.
 - `a11y` — three modes had no `js-next`/`js-submit` class, so the global Enter binding
   could not reach them and they were quietly mouse-only. Modals had no dialog semantics and
   no focus trap. And every timer needed `aria-live="off"`: a chip that changes once a second
