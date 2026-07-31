@@ -923,8 +923,61 @@ ul.tight li{ font-size:13px; line-height:1.6; color:var(--ink-dim); margin-botto
   border-style:solid; border-color:transparent; color:rgba(0,0,0,.65);
   transform:translateY(-2px); box-shadow:0 3px 8px rgba(0,0,0,.3);
 }
+/* ---------- Letter Crush: what a special looks like when it goes off ----------
+   The mechanics existed without any of this and eight tiles simply vanished. A beam that
+   sweeps the row is the difference between "the row cleared" and "something cleared it". */
+.crush-fx{ position:absolute; pointer-events:none; z-index:4; }
+.fx-beam{ background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+  mix-blend-mode:screen; }
+.fx-beam.fx-row{ width:100%; height:12.5%; animation:fxBeamRow .42s ease-out forwards; }
+.fx-beam.fx-col{ height:100%; width:12.5%;
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.95),transparent);
+  animation:fxBeamCol .42s ease-out forwards; }
+@keyframes fxBeamRow{ from{ transform:scaleX(.15); opacity:0; }
+  35%{ transform:scaleX(1); opacity:1; } to{ transform:scaleX(1); opacity:0; } }
+@keyframes fxBeamCol{ from{ transform:scaleY(.15); opacity:0; }
+  35%{ transform:scaleY(1); opacity:1; } to{ transform:scaleY(1); opacity:0; } }
+
+/* Shockwave for a Blast: a ring growing out of the tile that went off. */
+.fx-wave{ width:12.5%; height:12.5%; margin:-6.25% 0 0 -6.25%;
+  border-radius:50%; border:3px solid rgba(255,255,255,.9);
+  animation:fxWave .5s cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes fxWave{ from{ transform:scale(.4); opacity:1; }
+  to{ transform:scale(5.5); opacity:0; border-width:1px; } }
+
+/* The Inkblot takes a whole letter, so its effect crosses the whole board. */
+.fx-ripple{ width:12.5%; height:12.5%; margin:-6.25% 0 0 -6.25%; border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.55) 0 40%,rgba(255,255,255,0) 70%);
+  animation:fxRipple .72s ease-out forwards; }
+@keyframes fxRipple{ from{ transform:scale(.3); opacity:1; }
+  to{ transform:scale(15); opacity:0; } }
+
+/* The board reacts. Two levels so a combo outweighs a cascade. */
+.crush-board.shake{ animation:fxShake .3s ease-in-out; }
+.crush-board.shake-2{ animation:fxShake2 .42s ease-in-out; }
+@keyframes fxShake{ 20%{ transform:translate(-3px,2px); } 50%{ transform:translate(3px,-2px); }
+  75%{ transform:translate(-2px,-1px); } to{ transform:none; } }
+@keyframes fxShake2{ 15%{ transform:translate(-6px,3px) rotate(-.4deg); }
+  40%{ transform:translate(6px,-4px) rotate(.4deg); }
+  65%{ transform:translate(-4px,2px) rotate(-.2deg); }
+  85%{ transform:translate(2px,-1px); } to{ transform:none; } }
+
+/* Squash on landing, so a dropping column reads as weight. */
+.crush-cell.land > .crush-face{ animation:fxLand .24s cubic-bezier(.3,1.5,.5,1); }
+@keyframes fxLand{ 0%{ transform:scaleY(1.18) scaleX(.88); }
+  55%{ transform:scaleY(.86) scaleX(1.1); } to{ transform:none; } }
+
+/* Idle breathing: the board is never quite still, which costs nothing and stops it
+   looking like a screenshot between moves. */
+.crush-cell:not(.sp) > .crush-face{ animation:fxBreathe 3.4s ease-in-out infinite; }
+@keyframes fxBreathe{ 50%{ filter:brightness(1.045); } }
+.crush-cell.sel > .crush-face{ animation:none; }
+
 :root[data-motion="off"] .crush-cell,
-:root[data-motion="off"] .crush-face{ transition:none; animation:none; }
+:root[data-motion="off"] .crush-face,
+:root[data-motion="off"] .crush-cell > .crush-face,
+:root[data-motion="off"] .crush-board{ transition:none !important; animation:none !important; }
+:root[data-motion="off"] .crush-fx{ display:none; }
 
 .runner-canvas{ width:100%; height:auto; display:block; border-radius:14px;
   background:linear-gradient(180deg,color-mix(in srgb,var(--bg-2) 80%,transparent),var(--bg-1));

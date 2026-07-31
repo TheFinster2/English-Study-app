@@ -288,18 +288,21 @@ EN.Games.lettercrush = (function () {
       if (cell.kind === "line") {
         if (cell.axis === "row") for (let i = 0; i < N; i++) out.push([r, i]);
         else for (let i = 0; i < N; i++) out.push([i, c]);
+        fx("beam", r, c, cell.axis === "row" ? "row" : "col");
         EN.Sound.crit();
       } else if (cell.kind === "blast") {
         for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
           const rr = r + dr, cc = c + dc;
           if (rr >= 0 && cc >= 0 && rr < N && cc < N) out.push([rr, cc]);
         }
+        fx("wave", r, c);
         EN.Sound.crit();
       } else if (cell.kind === "ink") {
         const want = cell.t;
         for (let rr = 0; rr < N; rr++) for (let cc = 0; cc < N; cc++) {
           if (grid[rr][cc] && grid[rr][cc].t === want) out.push([rr, cc]);
         }
+        fx("ripple", r, c);
         EN.Sound.rareDrop();
       }
       flash();
@@ -333,8 +336,12 @@ EN.Games.lettercrush = (function () {
           if (grid[rr][cc] && (grid[rr][cc].t === want || grid[rr][cc].t === a.t)) out.push([rr, cc]);
         }
       }
+      if (kinds === "line+line") { fx("beam", r, c, "row"); fx("beam", r, c, "col"); }
+      else if (kinds.indexOf("ink") >= 0) fx("ripple", r, c);
+      else fx("wave", r, c);
       EN.Sound.rareDrop();
       flash(true);
+      shake(kinds.indexOf("ink") >= 0 ? 2 : 1);
       say("Combination");
       return out;
     }
@@ -407,6 +414,9 @@ EN.Games.lettercrush = (function () {
 
       if (cascade >= 2) { EN.Sound.combo(cascade); say(CALLOUTS[Math.min(cascade, CALLOUTS.length - 1)]); }
       else EN.Sound.match();
+      /* The board itself reacts once a cascade is genuinely large. Held back to 3 so it
+         stays an event rather than a tic. */
+      if (cascade >= 3) shake(cascade >= 5 ? 2 : 1);
 
       /* Float the number where it happened, not in the middle of the board. */
       const mid = list[Math.floor(list.length / 2)];
@@ -450,6 +460,14 @@ EN.Games.lettercrush = (function () {
             const cell = makeCell(rnd());
             place(cell, -1 - above++, c, true);       // start off the top edge
             grid[r][c] = cell;
+          }
+          /* Squash on landing, so a column dropping reads as weight rather than as a
+             list re-indexing. Removed on animationend so it can fire again next cascade. */
+          const landed = grid[r][c];
+          if (landed && !reduced) {
+            landed.node.classList.remove("land");
+            void landed.node.offsetWidth;
+            landed.node.classList.add("land");
           }
         }
       }
@@ -550,6 +568,38 @@ EN.Games.lettercrush = (function () {
       callout.classList.remove("show");
       void callout.offsetWidth;
       callout.classList.add("show");
+    }
+
+    /**
+     * A one-shot effect layer over the board: a beam along a row or column, a shockwave
+     * ring, or a colour ripple. Spawned, animated by CSS, removed on animationend.
+     *
+     * Without these a special fired and eight tiles simply vanished — the mechanic was
+     * there and none of the impact was. This is the difference between "the row cleared"
+     * and "something swept the row".
+     */
+    function fx(kind, r, c, axis) {
+      if (reduced) return;
+      const n = U.el("div", { class: "crush-fx fx-" + kind + (axis ? " fx-" + axis : "") });
+      const pc = v => (v / N * 100) + "%";
+      if (kind === "beam") {
+        if (axis === "row") { n.style.top = pc(r); n.style.left = "0"; }
+        else { n.style.left = pc(c); n.style.top = "0"; }
+      } else {
+        /* Centred on the tile, so the ring grows out of where it went off. */
+        n.style.left = pc(c + 0.5); n.style.top = pc(r + 0.5);
+      }
+      board.appendChild(n);
+      n.addEventListener("animationend", () => n.remove());
+      setTimeout(() => n.remove(), 1200);           // belt and braces if the event is missed
+    }
+
+    /** Nudge the whole board. Level 1 for a special, 2 for a combo or a deep cascade. */
+    function shake(level) {
+      if (reduced) return;
+      board.classList.remove("shake", "shake-2");
+      void board.offsetWidth;
+      board.classList.add(level >= 2 ? "shake-2" : "shake");
     }
 
     function flash(big) {
