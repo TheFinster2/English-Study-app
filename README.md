@@ -97,7 +97,12 @@ deterministic, so when you lose one the app can say which criterion and why:
 | **Effect** | 0–1 | does it say what that **does**? *(an analytical verb, not a plot verb)* |
 
 Point gates the total: a fluent, well-anchored answer to a *different* question caps at one
-mark, because naming a technique is worth nothing if the claim is wrong.
+mark, because naming a technique is worth nothing if the claim is wrong. And the **fourth**
+mark needs more than a score over the line — it needs the right reading to be clearly nearer
+than the nearest wrong one, because on 49 hand-labelled responses good answers span 0.396 to
+0.906 cosine and wrong ones span 0.113 to 0.979. Those distributions *overlap*: no threshold
+exists that scraps no good answer and passes no wrong one, so the threshold sits below the
+weakest good answer and the last mark is gated on the contrast instead.
 
 You will never see the underlying similarity number. A cosine is not a mark, and dressing
 one up as a band would be the single most dishonest thing this app could do — the mark above
@@ -201,6 +206,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `economy` | browser | the anti-rush floor is both real **and** reachable; the arcade pays nothing |
 | `marking` | browser | the marking stack ranks answers the way a marker would |
 | `a11y` | browser | keyboard play, dialog semantics, and what gets announced |
+| `calibrate` | browser | run the 49 hand-labelled responses; report where the app and a marker disagree |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -223,6 +229,11 @@ Every assertion in here exists because something was actually wrong:
 - `marking` — the near-miss veto was rejecting good answers for being about the right
   subject. The suite asserts the *ordering* of a hand-labelled set, not absolute scores, so
   it survives a model swap.
+- `calibrate` — the 62 prompt thresholds shipped at a single copied value that had never
+  been measured. Three retunings later (0.62 → 0.50 → 0.38, each one measured) the labelled
+  set separates cleanly: mean mark 3.21 good, 2.54 decent, 1.78 thin, 1.23 wrong. The suite
+  prints its disagreements, because the point of a calibration run is to tell you which
+  number to move.
 - `a11y` — three modes had no `js-next`/`js-submit` class, so the global Enter binding
   could not reach them and they were quietly mouse-only. Modals had no dialog semantics and
   no focus trap. And every timer needed `aria-live="off"`: a chip that changes once a second

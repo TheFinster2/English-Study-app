@@ -364,7 +364,7 @@ EN.Mark = (function () {
      rules in §9 apply uniformly and keeps a cosine score from ever being rendered
      as a mark. */
 
-  const DEFAULT_THRESHOLD = 0.50;
+  const DEFAULT_THRESHOLD = 0.38;
   /** How far below threshold still counts as "close" rather than "not yet". */
   const CLOSE_BAND = 0.14;
 
@@ -402,6 +402,21 @@ EN.Mark = (function () {
   const NEAR_MISS_MARGIN = 0.045;
   const MAX_MARK = 4;
 
+  /* FULL MARKS need the best exemplar to beat the nearest wrong reading by this much.
+     This is the fix for the real problem the calibration set exposed, which no threshold
+     alone can solve: on 49 hand-labelled responses, good answers span 0.396–0.906 cosine
+     and wrong ones span 0.113–0.979. The distributions OVERLAP — 384 dimensions cannot
+     separate "made the point" from "misread it" on absolute similarity, and pretending
+     otherwise is how a threshold ends up punishing whoever writes best.
+
+     So the threshold is set low enough that no good answer is scrapped, and the fourth mark
+     is gated on the CONTRAST instead. A wrong answer sits close to its own near-miss by
+     construction, because a near-miss IS the misreading; a good answer does not. Measured:
+     the old arrangement scrapped four good answers and let none through; this one scraps
+     none and lets one thin answer reach full marks, which is the better trade because a
+     false pass still shows the student every model answer. */
+  const FULL_MARK_GATE = 0.06;
+
   /* Thresholds are lower than they look because cosine punishes length. A longer, more
      sophisticated answer scores BELOW a short blunt one that reuses the exemplar's shape
      — on the hand-labelled set the four best answers averaged 0.61 while two merely
@@ -411,7 +426,7 @@ EN.Mark = (function () {
 
   /* Verbs that assert an effect on a reader, as opposed to recounting the plot. Shared
      with the Thesis Forge checks — an analytical sentence almost always contains one. */
-  const EFFECT_VERBS = /\b(position|positions|positioned|construct|constructs|constructed|represent|represents|present|presents|argue|argues|invite|invites|force|forces|forced|expose|exposes|reveal|reveals|suggest|suggests|imply|implies|create|creates|convey|conveys|emphasise|emphasises|emphasize|emphasizes|undercut|undercuts|undermine|undermines|reframe|reframes|withhold|withholds|refuse|refuses|deny|denies|foreclose|forecloses|locate|locates|convert|converts|enact|enacts|complicate|complicates|destabilise|destabilises|unsettle|unsettles|make|makes|leave|leaves|allow|allows|prevent|prevents|demonstrate|demonstrates|signal|signals|frame|frames|cast|casts|render|renders|elevate|elevates|diminish|diminishes|collapse|collapses|equate|equates|subordinate|subordinates)\b/;
+  const EFFECT_VERBS = /\b(position|positions|positioned|construct|constructs|constructed|represent|represents|present|presents|argue|argues|invite|invites|force|forces|forced|expose|exposes|reveal|reveals|suggest|suggests|imply|implies|create|creates|convey|conveys|emphasise|emphasises|emphasize|emphasizes|undercut|undercuts|undermine|undermines|reframe|reframes|withhold|withholds|refuse|refuses|deny|denies|foreclose|forecloses|locate|locates|relocate|relocates|convert|converts|enact|enacts|complicate|complicates|destabilise|destabilises|unsettle|unsettles|make|makes|leave|leaves|allow|allows|prevent|prevents|demonstrate|demonstrates|signal|signals|frame|frames|cast|casts|render|renders|elevate|elevates|diminish|diminishes|collapse|collapses|equate|equates|subordinate|subordinates|strip|strips|remove|removes|admit|admits|concede|concedes|surrender|surrenders|forfeit|forfeits|trap|traps|seal|seals|close|closes|reduce|reduces|flatten|flattens|substitute|substitutes|replace|replaces)\b/;
   const PLOT_ONLY = /\b(happens|then he|then she|goes to|talks to|meets|dies at the end|the story is about|this quote is when|is about when|is the part where)\b/;
 
   /**
@@ -496,11 +511,21 @@ EN.Mark = (function () {
    * response that named any technique in the quote and used any analytical verb scored
    * "close" while saying something untrue — measured on a deliberately thin answer.
    */
-  function capped(marks) {
+  function capped(marks, contrast) {
     const point = (marks.find(m => m.id === "point") || { got: 0 }).got;
     const raw = marks.reduce((n, m) => n + m.got, 0);
-    const total = point === 0 ? Math.min(raw, 1) : raw;
-    return { marks, total, outOf: MAX_MARK, gated: point === 0 && raw > 1 };
+    let total = point === 0 ? Math.min(raw, 1) : raw;
+    /* The fourth mark is the one that says "nothing missing", so it needs the clearest
+       evidence: not just a score over the line, but a score clearly nearer a right reading
+       than a wrong one. `contrast` is best − worst; absent (Layer B, or no near-misses
+       authored) the gate cannot apply and does not. */
+    let gatedByContrast = false;
+    if (total >= MAX_MARK && typeof contrast === "number" && !(contrast >= FULL_MARK_GATE)) {
+      total = MAX_MARK - 1;
+      gatedByContrast = true;
+    }
+    return { marks, total, outOf: MAX_MARK,
+             gated: point === 0 && raw > 1, gatedByContrast };
   }
 
   /**
@@ -584,7 +609,10 @@ EN.Mark = (function () {
     const flags = [];
     const closest = bestAt >= 0 ? answers[bestAt] : answers[0] || "";
 
-    const scored = buildMarks(raw, s, best, threshold);
+    /* best − worst: how much clearer the right reading is than the nearest wrong one.
+       Gates the fourth mark; see FULL_MARK_GATE. */
+    const contrast = worstAt >= 0 ? best - worst : Infinity;
+    const scored = capped(buildMarks(raw, s, best, threshold).marks, contrast);
     let { marks, total } = scored;
     let note = null;
 
@@ -607,7 +635,7 @@ EN.Mark = (function () {
             why: m.got >= 2 ? "Close, but this drifts toward a common misreading of the same idea."
                             : "This lands nearer a misreading than the point. Compare it with the model answers." })
         : m);
-      ({ marks, total } = capped(marks));
+      ({ marks, total } = capped(marks, contrast));
       if (total <= 1) note = "That lands closer to a misreading than to the point.";
       }
     }
@@ -618,12 +646,22 @@ EN.Mark = (function () {
        earned and are not confiscated, because the student did name the technique. */
     if (reversed(raw, closest)) {
       flags.push("reversed");
+      /* Costs both Point marks only if the answer did not clear the bar on its own merits.
+         The check is a word-order heuristic, not proof: "Being 'made' rather than making
+         relocates agency to God" was zeroed against an exemplar reading "not going to make
+         music but to be made into it" — both say the same thing, and both contain a
+         contrast construction, so the shared terms appear in opposite surface order. A
+         heuristic that confidently destroys a good answer is worse than one that costs it a
+         mark, so above threshold it costs one and says why. */
+      const strong = best >= threshold;
       marks = marks.map(m => m.id === "point"
-        ? Object.assign({}, m, { got: 0,
-            why: "The pieces are right but the direction is inverted — check which term you have put above which." })
+        ? Object.assign({}, m, { got: strong ? Math.max(0, m.got - 1) : 0,
+            why: strong
+              ? "Check the direction — the terms appear in the opposite order to the model answers, which is usually a sign of an inversion."
+              : "The pieces are right but the direction is inverted — check which term you have put above which." })
         : m);
-      ({ marks, total } = capped(marks));
-      note = "The pieces are right but the direction looks inverted.";
+      ({ marks, total } = capped(marks, contrast));
+      if (!strong) note = "The pieces are right but the direction looks inverted.";
     } else if (negationMismatch(raw, closest)) {
       flags.push("negation");
       /* A negation asymmetry with an otherwise passing score is the shape of an accidental
@@ -632,7 +670,7 @@ EN.Mark = (function () {
         ? Object.assign({}, m, { got: 1,
             why: "One of you is negating and the other isn't — check whether you meant the opposite." })
         : m);
-      ({ marks, total } = capped(marks));
+      ({ marks, total } = capped(marks, contrast));
     }
 
     /* The verdict is now a summary of the mark, not a separate judgement. Three of four
@@ -640,12 +678,20 @@ EN.Mark = (function () {
     const pointGot = (marks.find(m => m.id === "point") || { got: 0 }).got;
     const verdict = total >= 4 ? "nailed" : (pointGot >= 1 && total >= 2) ? "close" : "notYet";
     const missing = marks.filter(m => m.got < m.max);
+    /* Three out of four has two different causes and they need different sentences. Either
+       a criterion is short — say which — or every criterion was met and the contrast gate
+       held the last mark back, in which case nothing is missing and claiming otherwise
+       would be a lie (and, before this, a crash on missing[0]). */
+    const threeBecauseGated = scored.gatedByContrast || !missing.length;
 
     return {
       verdict, score: best, layer: "C", flags,
-      marks, total, outOf: MAX_MARK,
+      marks, total, outOf: MAX_MARK, gatedByContrast: !!scored.gatedByContrast,
       feedback: note ? note
               : total === 4 ? "Full marks. Here's how others put it:"
+              : total === 3 && threeBecauseGated
+                ? "Three out of four. Every criterion is met, but this still reads close to a " +
+                  "common misreading — compare it with the model answers."
               : total === 3 ? "Three out of four — one thing short: " + missing[0].label.toLowerCase() + "."
               : total === 2 ? "Halfway. You're circling it — look at what these do differently:"
               : total === 1 ? "One mark. Read these and see what they do that yours doesn't:"
