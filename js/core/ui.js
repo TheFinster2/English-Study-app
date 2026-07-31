@@ -34,6 +34,93 @@ EN.UI = (function () {
     return Math.min(READ_CAP_MS, READ_BASE_MS + n * READ_PER_WORD_MS);
   }
 
+  /* ── the anti-farm floor, which is NOT the same number ────────
+     readTimeFor above was doing two jobs with opposite requirements, and that was the
+     bug behind "I get no XP for rushing even though I read the question".
+
+     Job one is sizing a CLOCK. There it should be generous: give a student long enough
+     to read a 180-word paragraph carefully, and let Nightmare cut only the slack above
+     it. Too small is the failure.
+
+     Job two is catching somebody TAPPING WITHOUT READING. There it should be tight: the
+     question is "could a human possibly have taken this in", not "did they read it at a
+     careful pace". Too large is the failure — and too large is what shipped.
+
+     Measured on the real bank: at 240 ms/word over the stem, the quote AND all four
+     options, a median Common-Module boss round needed 23.1 seconds before an answer
+     scored, against a 26-second clock. That is a 2.9-second window in which XP existed
+     at all. Answer at twenty seconds having genuinely read it: nothing. Worse on Hard
+     and Nightmare, where the clock shrinks toward the floor and the window closes to
+     about 1.6 seconds. Rapid Fire was worse still — 120 seconds for 24 questions is
+     ~5 seconds each, so essentially every answer in the mode was scoring zero.
+
+     So the floor is now its own function with its own numbers:
+
+       • 55 ms/word (~1,100 wpm) on the stem and quote — a skim, not a read. This is a
+         lower bound on the physically possible, which is what an anti-farm gate needs.
+       • 25 ms/word on the OPTIONS, because you scan them and stop at the one you want.
+         Charging full reading rate for three distractors you never finished is the
+         single biggest source of the old over-estimate.
+       • capped at 9 seconds outright, and additionally at 45% of the mode's clock where
+         there is one — so a timed mode can never be built in which XP is unreachable.
+         That cap is the structural guarantee; the rest is calibration. */
+  const RUSH_BASE_MS = 600;
+  const RUSH_READ_MS = 55;
+  const RUSH_SCAN_MS = 25;
+  const RUSH_CAP_MS = 9000;
+  const RUSH_CLOCK_SHARE = 0.45;
+
+  /**
+   * The floor below which an answer is treated as unread and pays nothing.
+   *
+   * spec = { read, scan } — `read` is prose the student must take in (stem, quote,
+   * paragraph); `scan` is the option list. A bare string is treated as all `read`.
+   * `clockSeconds` is the mode's clock for this item, if it has one.
+   */
+  function rushFloor(spec, clockSeconds) {
+    const s = typeof spec === "string" || Array.isArray(spec) ? { read: spec } : (spec || {});
+    const count = t => Array.isArray(t) ? t.reduce((a, x) => a + U.words(x || ""), 0)
+                                        : U.words(t || "");
+    let ms = RUSH_BASE_MS + count(s.read) * RUSH_READ_MS + count(s.scan) * RUSH_SCAN_MS;
+    ms = Math.min(ms, RUSH_CAP_MS);
+    if (clockSeconds > 0) ms = Math.min(ms, clockSeconds * 1000 * RUSH_CLOCK_SHARE);
+    return Math.round(ms);
+  }
+
+  /**
+   * A visible countdown of the rush floor.
+   *
+   * The floor being invisible was half the complaint. A student answers, gets told
+   * "rushed, no XP", and has no way to know what would have counted or how close they
+   * were — so the rule reads as the app being arbitrary rather than as a rule. This
+   * returns a node that shows the remaining time and then swaps itself for a confirmation
+   * that the answer will now score. Purely informational; the gate is still in the game.
+   */
+  function rushHint(minReadMs) {
+    const node = U.el("span", { class: "rush-hint" });
+    if (!(minReadMs > 250)) { node.hidden = true; return { node, stop() {} }; }
+    const started = performance.now();
+    let raf = null, seen = false;
+    function paint() {
+      /* `seen` matters: the first paint runs before the caller has appended the node, so
+         bailing on !isConnected killed the loop immediately and the hint rendered blank.
+         Only a node that WAS in the document and no longer is means the screen has gone. */
+      if (node.isConnected) seen = true;
+      else if (seen) return stop();
+      const left = minReadMs - (performance.now() - started);
+      if (left <= 0) {
+        node.classList.add("ready");
+        node.textContent = "✓ counts";
+        return stop();
+      }
+      node.textContent = "⏱ " + (left / 1000).toFixed(1) + "s";
+      raf = requestAnimationFrame(paint);
+    }
+    function stop() { if (raf) cancelAnimationFrame(raf); raf = null; }
+    paint();
+    return { node, stop };
+  }
+
   /**
    * A clock for a timed mode, in seconds.
    *
@@ -417,6 +504,6 @@ EN.UI = (function () {
 
   return { route, go, init, handleRoute, syncHeader, applyTheme, toast, modal, closeModal,
            confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse,
-           crutch, crutchCost, readTimeFor, timeBudget,
+           crutch, crutchCost, readTimeFor, rushFloor, rushHint, timeBudget,
            MIN_BONUS_ACCURACY, READ_BASE_MS, READ_PER_WORD_MS, READ_CAP_MS };
 })();

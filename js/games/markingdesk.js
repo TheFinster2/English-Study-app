@@ -182,7 +182,9 @@ EN.Games.marking = (function () {
 
       shownAt = performance.now();
       // Reading a 130-word paragraph carefully is the whole task, so the floor is real.
-      minRead = UI.readTimeFor(p.para);
+      /* 130 words of Band-4 prose is a real read, and this mode has no clock, so the
+         floor is the honest 9-second cap rather than a fraction of anything. */
+      minRead = UI.rushFloor({ read: p.para });
 
       function sync() {
         const ready = chosenBand !== null && !revealed;

@@ -84,6 +84,11 @@ EN.QuizCore = (function () {
     /* Everything visible before the student answers, which is what UI.readTimeFor
        measures. A two-line quote and a 180-word paragraph are not the same read. */
     const readWords = [q.stem || "", q.q].concat(q.choices).join(" ");
+    /* Split for the anti-farm floor: the stem and the quote are read, the options are
+       scanned. See UI.rushFloor — charging full reading rate for four distractors the
+       student never finished is what made honest answers score nothing. */
+    const readProse = [q.stem || "", q.q].join(" ");
+    const scanWords = q.choices.join(" ");
 
     function disable() { buttons.forEach(b => (b.disabled = true)); }
 
@@ -113,7 +118,7 @@ EN.QuizCore = (function () {
       });
     }
 
-    return { node, reveal, disable, buttons, fiftyFifty, readWords };
+    return { node, reveal, disable, buttons, fiftyFifty, readWords, readProse, scanWords };
   }
 
   return { buildCard, stemNode, KEYS };
@@ -176,7 +181,7 @@ EN.Games.quiz = (function () {
     shell.body.appendChild(stage);
     shell.body.appendChild(puBar.node);
 
-    let card = null;
+    let card = null, rush = null;
 
     /* ── the clock, which STOPS while you are reading ──────────
        This was the "I submitted an answer and just got kicked" bug. The clock ran
@@ -211,7 +216,8 @@ EN.Games.quiz = (function () {
       startClock();
     }
     startClock();
-    UI.onLeave(() => { clearInterval(timerId); document.removeEventListener("keydown", onKey); });
+    UI.onLeave(() => { clearInterval(timerId); if (rush) rush.stop();
+                       document.removeEventListener("keydown", onKey); });
     document.addEventListener("keydown", onKey);
 
     function onKey(e) {
@@ -236,7 +242,15 @@ EN.Games.quiz = (function () {
       });
       stage.appendChild(card.node);
       shownAt = performance.now();
-      minRead = UI.readTimeFor(card.readWords);
+      /* In a total-clock mode the per-question share IS the clock for this item, so the
+         floor is capped against it — otherwise Rapid Fire's ~5 seconds a question sat
+         below the floor and the whole mode paid nothing. */
+      const perItem = c.totalTime ? c.totalTime / Math.max(1, c.count || questions.length) : 0;
+      minRead = UI.rushFloor({ read: card.readProse, scan: card.scanWords }, perItem);
+      /* Say so up front. An unexplained "rushed, no XP" reads as the app being arbitrary. */
+      if (rush) rush.stop();
+      rush = UI.rushHint(minRead);
+      shell.meta.appendChild(rush.node);
       puBar.refresh();
     }
 
@@ -289,6 +303,7 @@ EN.Games.quiz = (function () {
 
       /* Answered — stop the clock before the feedback panel goes up. */
       pauseClock();
+      if (rush) { rush.stop(); rush.node.remove(); }
 
       const isLast = !c.totalTime && idx >= questions.length - 1;
       const outOfLives = c.lives && lives <= 0;

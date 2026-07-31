@@ -196,9 +196,12 @@ EN.Games.technique = (function () {
       stage.appendChild(card);
 
       shownAt = performance.now();
-      minRead = UI.readTimeFor(
-        (it.kind === "forward" ? it.quote.text : it.options.map(o => o.quote.text).join(" ")) +
-        " " + it.prompt);
+      /* Forward: read the quote, scan the technique names. Reverse: the options ARE
+         quotes, so they are the read and the prompt is trivial. */
+      minRead = it.kind === "forward"
+        ? UI.rushFloor({ read: it.quote.text + " " + it.prompt,
+                         scan: it.options.map(o => o.label || "").join(" ") })
+        : UI.rushFloor({ read: it.options.map(o => o.quote.text).join(" ") + " " + it.prompt });
 
       function answer(chosen, btn) {
         const ok = chosen === it.answerIndex;

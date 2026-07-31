@@ -153,7 +153,8 @@ EN.Games.deconstruct = (function () {
       card.appendChild(wrap);
       stage.appendChild(card);
       shownAt = performance.now();
-      minRead = UI.readTimeFor(it.question + " " + it.prompt + " " + it.options.map(o => o.label).join(" "));
+      minRead = UI.rushFloor({ read: it.question + " " + it.prompt,
+                               scan: it.options.map(o => o.label).join(" ") });
 
       function answer(chosen, btn) {
         const ok = chosen === it.answerIndex;

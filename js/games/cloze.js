@@ -141,7 +141,10 @@ EN.Games.cloze = (function () {
       stage.appendChild(card);
       inputs[0] && inputs[0].input.focus();
       shownAt = performance.now();
-      minRead = UI.readTimeFor(it.quote.text);
+      /* A cloze IS the quote, so this is a genuine read rather than a scan — but it is
+         still only a gate against tapping, so it uses the rush floor and its 9s cap
+         rather than the clock-sizing estimate. */
+      minRead = UI.rushFloor({ read: it.quote.text });
 
       submit.addEventListener("click", () => check(it, inputs, card, submit, hintBtn));
     }

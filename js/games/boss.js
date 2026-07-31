@@ -128,11 +128,11 @@ EN.Games.boss = (function () {
 
     let bossHp = boss.hp, myHp = boss.playerHp, round = 0;
     let xp = 0, coins = 0, answered = 0, right = 0, finished = false;
-    let timerId = null, timeLeft = 0, minRead = 800, shownAt = 0;
+    let timerId = null, timeLeft = 0, minRead = 800, shownAt = 0, rush = null;
     /* The Party's gimmick state: questions already answered correctly, one of which gets
        "rewritten" each round. */
     const answeredRight = [];
-    let rewritten = null;
+    let rewritten = null, lastRewrite = -99;
 
     const shell = UI.gameShell(boss.icon + " " + boss.name, { confirmExit: true, backTo: "/boss" });
     root.appendChild(shell.root);
@@ -158,7 +158,7 @@ EN.Games.boss = (function () {
 
     const stage = U.el("div");
     shell.body.appendChild(stage);
-    UI.onLeave(() => clearInterval(timerId));
+    UI.onLeave(() => { clearInterval(timerId); if (rush) rush.stop(); });
 
     function drawBars() {
       bossBar.firstChild.style.width = Math.max(0, (bossHp / boss.hp) * 100) + "%";
@@ -182,12 +182,35 @@ EN.Games.boss = (function () {
 
       /* The Party edits one previously-correct answer and waits. Answering it again is
          worth a hit; ignoring it costs you one. */
-      if (boss.gimmick === "rewrite" && answeredRight.length >= 2 && round % 2 === 0 && !rewritten) {
+      /* ── The Party's gimmick, and how it must NOT work ─────────
+         This used to shift `a` to a different option while leaving the four choices
+         untouched. The correct answer was therefore silently redefined as a wrong one, so
+         a student who picked the true answer — the one they had already been told was
+         right — was marked wrong and took damage. Its own `why` text said "the answer you
+         gave before is still the right one" while the scoring said the opposite, and
+         there was no way to work out what it wanted, because what it wanted was false.
+
+         The fantasy only works the other way round. The Party falsifies the RECORD, not
+         the truth: it claims you answered something else, and the task is to hold to the
+         real answer anyway. So the key stays true, the falsification is stated out loud,
+         and the question is answerable by knowing the text — which is the entire point of
+         having a boss about Orwell. */
+      /* Trigger, retuned. It used to need `round % 2 === 0` AND two correct answers, so
+         the earliest it could fire was round 4 — and The Party has 9 HP against 2 damage a
+         hit, so a competent player wins in five rounds. The boss's signature gimmick was
+         firing once, just before it died, or not at all. It now fires from the third round
+         with a two-round cooldown. */
+      if (boss.gimmick === "rewrite" && answeredRight.length >= 2 && !rewritten &&
+          round >= 3 && round - lastRewrite >= 2) {
+        lastRewrite = round;
         rewritten = answeredRight[Math.floor(Math.random() * answeredRight.length)];
+        /* The Party's false claim: any option that is not the real answer. */
+        const wrongIdx = (rewritten.a + 1 + Math.floor(Math.random() * (rewritten.choices.length - 1)))
+                         % rewritten.choices.length;
         const fake = Object.assign({}, rewritten, {
-          // Shift the key to a different option: the "rewritten" record.
-          a: (rewritten.a + 1 + Math.floor(Math.random() * (rewritten.choices.length - 1))) % rewritten.choices.length,
-          why: "The Party edited this one. The answer you gave before is still the right one — " + rewritten.why
+          partyClaim: rewritten.choices[wrongIdx],
+          why: "The record was falsified. The answer you gave the first time was correct then and is correct now — " +
+               rewritten.why
         });
         renderQuestion([fake], true);
         return;
@@ -203,9 +226,17 @@ EN.Games.boss = (function () {
 
     function renderQuestion(qs, isRewrite) {
       const wrap = U.el("div", { class: "grid" });
+      /* Name the falsification. The student has to be able to see WHAT was altered,
+         otherwise the round is a guess dressed up as a theme. */
       if (isRewrite) wrap.appendChild(U.el("div", { class: "feedback no" }, [
         U.el("b", { text: "The record has been corrected. " }),
-        U.el("span", { text: "You have answered this before. Answer it again — correctly." })
+        U.el("span", { text: "You answered this before, and the Party has amended what you said." }),
+        qs[0].partyClaim ? U.el("div", { class: "party-claim" }, [
+          U.el("div", { class: "tiny muted", text: "The record now shows you answered:" }),
+          U.el("div", { class: "party-claim-text", text: "“" + qs[0].partyClaim + "”" })
+        ]) : null,
+        U.el("div", { class: "tiny", style: "margin-top:8px",
+          text: "You did not. Answer it truthfully again — the right answer has not changed." })
       ]));
       if (qs.length > 1) wrap.appendChild(U.el("div", { class: "feedback" }, [
         U.el("b", { text: "Both, or neither. " }),
@@ -236,7 +267,11 @@ EN.Games.boss = (function () {
       const chosen = new Array(qs.length).fill(null);
       const results = new Array(qs.length).fill(null);
       shownAt = performance.now();
-      minRead = UI.readTimeFor(cards.map(c => c.readWords).join(" "));
+      minRead = UI.rushFloor({ read: cards.map(c => c.readProse).join(" "),
+                               scan: cards.map(c => c.scanWords).join(" ") }, clockFor());
+      if (rush) rush.stop();
+      rush = UI.rushHint(minRead);
+      shell.meta.appendChild(rush.node);
 
       timeLeft = Math.round(UI.timeBudget(clockFor(), cards.map(c => c.readWords).join(" ")));
       timeChip.textContent = U.fmtTime(timeLeft);
@@ -255,6 +290,7 @@ EN.Games.boss = (function () {
       }
 
       function resolve(ranOut) {
+        if (rush) { rush.stop(); rush.node.remove(); }
         cards.forEach((c, i) => { if (chosen[i] === null) c.reveal(-1); });
         const tooFast = performance.now() - shownAt < minRead;
         // Pair boss: both or neither.
@@ -285,7 +321,9 @@ EN.Games.boss = (function () {
 
         const done = bossHp <= 0 || myHp <= 0;
         stage.appendChild(U.el("div", { class: "row", style: "margin-top:14px" }, [
-          U.el("button", { class: "btn btn-primary",
+          /* js-next so the global Enter binding in app.js reaches it — every other mode
+             has it and the bosses did not, which quietly made them mouse-only. */
+          U.el("button", { class: "btn btn-primary js-next",
             text: done ? "See the outcome" : bossHp <= 2 ? "Finish it →" : "Next round →",
             on: { click: () => { if (done) return end(); EN.Sound.page(); nextRound(); window.scrollTo({ top: 0 }); } } })
         ]));

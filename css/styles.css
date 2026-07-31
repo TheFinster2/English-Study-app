@@ -962,3 +962,18 @@ h2.ea-pool-head.spent{ display:none; }
   backdrop-filter:blur(14px) saturate(1.2);
   box-shadow:0 10px 30px rgba(0,0,0,.4);
 }
+
+/* The rush floor, made visible. It counted silently and then told you afterwards that
+   your answer had not scored, which reads as arbitrary rather than as a rule. */
+.rush-hint{ font-size:11px; font-weight:800; padding:4px 8px; border-radius:9px;
+  font-family:"Segoe UI",system-ui,sans-serif; font-variant-numeric:tabular-nums;
+  color:var(--ink-faint); background:var(--card-2); border:1px dashed var(--line); }
+.rush-hint.ready{ color:var(--good); border-style:solid;
+  border-color:color-mix(in srgb,var(--good) 45%,transparent); }
+
+/* The Party's falsified record. Styled as a quotation of something you did not say,
+   because the round is unanswerable unless the student can see what was altered. */
+.party-claim{ margin-top:9px; padding:10px 12px; border-radius:11px;
+  border-left:3px solid var(--bad); background:color-mix(in srgb,var(--bad) 9%,transparent); }
+.party-claim-text{ font-style:italic; font-size:13.5px; margin-top:3px;
+  text-decoration:line-through; text-decoration-color:color-mix(in srgb,var(--bad) 70%,transparent); }
