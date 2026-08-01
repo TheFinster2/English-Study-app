@@ -87,45 +87,89 @@ EN.Games.marginrunner = (function () {
 
   /* ── obstacle patterns ──
      Patterns rather than single obstacles, because a random stream of one-offs reads as
-     noise. Each returns its obstacles and the width it consumes; `from` is the chapter it
-     starts appearing in, so the vocabulary grows as the run does. */
+     noise. `from` is the chapter a pattern starts appearing in, so the vocabulary grows as
+     the run does, and `recover` is how many frames the player is COMMITTED for once they
+     have answered it — the spawner adds that to the gap so nothing is ever asked of them
+     while they are still in the air from the last thing.
+
+     Internal offsets are in FRAMES of travel, converted at spawn time. Fixed pixel offsets
+     were the bug behind "impossible to avoid": `gauntlet` placed its third block 186px
+     after its first, which at 8.6px/frame is inside one jump's airborne distance and at
+     5px/frame lands you 4 frames before it. There is no single pixel figure that is fair at
+     both speeds, so there should never have been one. */
+  const AIR_TAP = 27;                  // frames airborne on a tap jump
+  const AIR_HOLD = 40;                 // and on a held one
+
   const PATTERNS = [
-    { id: "footnote", from: 1, build: () => {
-        const w = 22 + Math.random() * 16, h = 30 + Math.random() * 10;
+    { id: "footnote", from: 1, recover: AIR_TAP, solve: "tap", build: () => {
+        /* Max 34 tall, not 40. A tap keeps the runner above 40px for only 14 frames and a
+           38px-wide block takes 12.3 to cross at opening speed — 1.7 frames of tolerance on
+           the SIMPLEST obstacle in the game, which is where the two-second deaths came from.
+           At 34 the window is 20 frames against 13.2. */
+        const w = 22 + Math.random() * 12, h = 26 + Math.random() * 8;
         return { obs: [{ kind: "footnote", x: 0, y: GROUND - h, w, h }], width: w };
       } },
-    { id: "marginalia", from: 1, build: () => {
+    { id: "marginalia", from: 1, recover: 14, solve: "duck", build: () => {
         const w = 56 + Math.random() * 30, h = 28;
         return { obs: [{ kind: "marginalia", x: 0, y: DUCK_BAR_BOTTOM - h, w, h }], width: w };
       } },
-    { id: "stack", from: 2, build: () => ({
+    { id: "stack", from: 2, recover: AIR_HOLD, solve: "hold", build: () => ({
         /* 78 tall: above the 59px tap apex and under the 110px held apex. The first
            obstacle that cannot be mashed through, which is how the hold teaches itself. */
         obs: [{ kind: "footnote", x: 0, y: GROUND - 78, w: 28, h: 78 }], width: 28
       }) },
-    { id: "staples", from: 2, build: () => {
-        const gap = 64 + Math.random() * 24;
+    { id: "staples", from: 2, recover: AIR_HOLD, solve: "hold", build: sp => {
+        /* A HELD jump, and the arithmetic is why. A tap clears a 34px block only between
+           frames 6 and 21 — a 15-frame window — and the whole pair has to be inside it at
+           once. The pair takes about 20 frames to cross at opening speed, so it does not
+           fit in a tap jump AT ALL, at any spacing: every airborne death in a measured set
+           of eight runs was this pattern or the stack. Held, the window for 34px runs from
+           frame 4 to frame 36, which swallows the crossing with eleven frames of timing
+           tolerance either side. A wide obstacle wanting a big jump also reads correctly. */
+        const d = sp * 8;
         return { obs: [{ kind: "footnote", x: 0, y: GROUND - 34, w: 20, h: 34 },
-                       { kind: "footnote", x: gap + 20, y: GROUND - 34, w: 20, h: 34 }],
-                 width: gap + 40 };
+                       { kind: "footnote", x: d + 20, y: GROUND - 34, w: 20, h: 34 }],
+                 width: d + 40 };
       } },
-    { id: "jumpduck", from: 3, build: () => ({
-        /* Jump the block, then get down again immediately — a dive, if you are quick. */
-        obs: [{ kind: "footnote", x: 0, y: GROUND - 36, w: 24, h: 36 },
-              { kind: "marginalia", x: 104, y: DUCK_BAR_BOTTOM - 28, w: 62, h: 28 }],
-        width: 166 } ) },
-    { id: "strike", from: 3, build: () => ({
-        /* A red-pen strike riding up and down, so the answer is timing rather than a
-           choice between jump and duck. At the bottom of its travel it catches a duck. */
-        obs: [{ kind: "strike", x: 0, y: GROUND - 70, w: 42, h: 14,
-                bobFrom: GROUND - 118, bobTo: GROUND - 30, phase: Math.random() * 6.28,
-                bobSpeed: 0.042 }], width: 42
+    { id: "jumpduck", from: 3, recover: AIR_TAP + 6, solve: "tap", build: sp => {
+        /* The bar sits 16 frames into the jump, which is past the apex — you clear it in
+           the air rather than having to land and duck, and a dive gets you under it if you
+           would rather have the ink below. */
+        const d = sp * 16;
+        return { obs: [{ kind: "footnote", x: 0, y: GROUND - 36, w: 24, h: 36 },
+                       { kind: "marginalia", x: d + 24, y: DUCK_BAR_BOTTOM - 28, w: 62, h: 28 }],
+                 width: d + 86 };
+      } },
+    { id: "strike", from: 3, recover: AIR_TAP, solve: "time", build: () => ({
+        /* A red-pen strike riding up and down. The bob is deliberately confined to a LOW
+           band, so a jump is the right answer at every phase of it.
+           It used to travel from GROUND−118 to GROUND−30, which needed three different
+           answers depending on where it happened to be — run under it high up, duck it in
+           the middle, jump it low down — and it kept moving while you were committed. A
+           duck chosen twenty frames out was invalidated by the strike descending 15px
+           before you got there, which is exactly the "impossible to avoid" case: the answer
+           was right when you gave it and wrong on arrival.
+
+           Confined to GROUND−38…−22 it is always cleared by a tap, with margin: the highest
+           it rides needs 38px of the 59px available, so the jump window is 15 frames against
+           a 10-frame crossing. An earlier attempt used GROUND−58 as the top of the bob,
+           which a tap cleared by one pixel — technically solvable, and a coin toss to play. */
+        obs: [{ kind: "strike", x: 0, y: GROUND - 30, w: 30, h: 14,
+                bobFrom: GROUND - 38, bobTo: GROUND - 22, phase: Math.random() * 6.28,
+                bobSpeed: 0.035 }], width: 30
       }) },
-    { id: "gauntlet", from: 4, build: () => ({
-        obs: [{ kind: "footnote", x: 0, y: GROUND - 32, w: 20, h: 32 },
-              { kind: "marginalia", x: 84, y: DUCK_BAR_BOTTOM - 26, w: 54, h: 26 },
-              { kind: "footnote", x: 186, y: GROUND - 46, w: 22, h: 46 }], width: 208
-      }) }
+    { id: "gauntlet", from: 4, recover: AIR_TAP, solve: "tap", build: sp => {
+        /* Jump the first, clear the bar in the air at 13 frames, land at 27, and the third
+           block is at 46 — nineteen frames to see it and press, with the jump buffer to
+           help. Frames, not pixels, so that holds at every speed. */
+        const a = sp * 13, b = sp * 46;
+        return { obs: [{ kind: "footnote", x: 0, y: GROUND - 32, w: 20, h: 32 },
+                       { kind: "marginalia", x: a + 20, y: DUCK_BAR_BOTTOM - 26, w: 54, h: 26 },
+                       /* 34, not 46: the same 14-frame window against an 11-frame crossing
+                          left this one two tenths of a frame of tolerance. */
+                       { kind: "footnote", x: b + 20, y: GROUND - 34, w: 22, h: 34 }],
+                 width: b + 42 };
+      } }
   ];
 
   function start(root, cfg) {
@@ -146,12 +190,16 @@ EN.Games.marginrunner = (function () {
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const pad = U.el("div", { class: "run-pad" }, [
-      U.el("button", { class: "btn run-btn", type: "button", "aria-label": "Jump" }, [
-        U.el("span", { class: "run-btn-ico", text: "⬆" }), U.el("span", { text: "Jump" })]),
-      U.el("button", { class: "btn run-btn", type: "button", "aria-label": "Duck" }, [
-        U.el("span", { class: "run-btn-ico", text: "⬇" }), U.el("span", { text: "Duck" })])
-    ]);
+    /* Duck on the left, Jump on the right. Tagged with data-act rather than relied on by
+       index, so swapping them is a one-line change and cannot silently rebind the game or
+       its suite to the wrong control. */
+    const duckBtn = U.el("button", { class: "btn run-btn", type: "button",
+      "aria-label": "Duck", data: { act: "duck" } }, [
+      U.el("span", { class: "run-btn-ico", text: "⬇" }), U.el("span", { text: "Duck" })]);
+    const jumpBtn = U.el("button", { class: "btn run-btn", type: "button",
+      "aria-label": "Jump", data: { act: "jump" } }, [
+      U.el("span", { class: "run-btn-ico", text: "⬆" }), U.el("span", { text: "Jump" })]);
+    const pad = U.el("div", { class: "run-pad" }, [duckBtn, jumpBtn]);
     host.body.appendChild(pad);
 
     /* ── palette ──
@@ -237,8 +285,8 @@ EN.Games.marginrunner = (function () {
         if (which === "jump") pressJump(); else setDuck(true);
       });
     }
-    bindPress(pad.children[0], "jump");
-    bindPress(pad.children[1], "duck");
+    bindPress(jumpBtn, "jump");
+    bindPress(duckBtn, "duck");
     bindPress(canvas, "jump");
 
     function onUp(e) {
@@ -296,48 +344,83 @@ EN.Games.marginrunner = (function () {
     }
 
     /* ── spawning ──
-       The gap is measured in reaction TIME rather than distance, so speeding up does not
-       quietly become unfair: at twice the speed the gap is twice as wide. */
+       Two numbers make a gap: how long the player is COMMITTED by the pattern they just
+       answered, and how long they then get to read the next one. Adding the first is the
+       fix for "impossible to avoid" — the old spawner counted reaction time from the moment
+       a pattern cleared the screen edge, so a stack (40 frames in the air) followed by
+       anything at the 56-frame minimum gave 16 frames to see it, decide and press. */
+    const REACT_MIN = 42, REACT_VAR = 38;
+
     function spawnPattern() {
       const usable = PATTERNS.filter(p => p.from <= chapter);
       const p = usable[Math.floor(Math.random() * usable.length)];
-      const built = p.build();
+      const built = p.build(speed);
       built.obs.forEach(o => {
-        obstacles.push(Object.assign({ minGap: Infinity, done: false, born: frame }, o,
-                                     { x: W + 30 + o.x }));
+        obstacles.push(Object.assign({ minGap: Infinity, done: false, born: frame,
+                                       pattern: p.id }, o, { x: W + 30 + o.x }));
       });
-      /* An arc of ink over the obstacle it is guarding. This is the whole risk/reward
-         mechanism: the drops are exactly where you would rather not be. */
-      if (Math.random() < 0.72) arcOver(W + 30, built.width, p.id);
-      /* Measured in FRAMES of travel, not pixels, so speeding up cannot quietly become
-         unfair. 56–100 frames is roughly a second to a second and two thirds. The first
-         tuning used 26–42, which is less time than a held jump takes to complete: a bot
-         that read the obstacle list and reacted correctly still died inside six seconds,
-         because the next obstacle arrived while it was still in the air from the last. */
-      const reaction = speed * (56 + Math.random() * 44);
-      gapLeft = built.width + reaction;
+      if (Math.random() < 0.78) inkFor(p, built, W + 30);
+      gapLeft = built.width + speed * (p.recover + REACT_MIN + Math.random() * REACT_VAR);
     }
 
-    function arcOver(x0, width, id) {
-      const n = 3 + Math.floor(Math.random() * 3);
-      /* Over a duck obstacle the drops have to be low, or they would ask for two
-         incompatible things at once. */
-      const low = id === "marginalia" || id === "gauntlet";
-      const peak = low ? GROUND - 34 : GROUND - 96 - Math.random() * 26;
+    /* The runner's centre height `t` frames into a jump, integrated exactly the way step()
+       does it. Used to lay ink along the line the player will actually travel. */
+    function centreAt(t, hold) {
+      let v = JUMP_V, py = GROUND, left = hold ? HOLD_MAX : 0;
+      for (let i = 0; i < t; i++) {
+        let g = GRAV;
+        if (left > 0 && v < 0) { g = HOLD_G; left--; }
+        v = Math.min(MAX_FALL, v + g);
+        py = Math.min(GROUND, py + v);
+      }
+      return py - RUN_H / 2;
+    }
+
+    /**
+     * Ink for a pattern, placed on the trajectory that solves it.
+     *
+     * The first version guessed a sine arc between two hand-picked heights, and the guess
+     * was wrong in both directions: the low ends of the arc sat at ground level against the
+     * face of the block you were meant to be jumping, and the peak sat above where the
+     * runner's centre could reach. Sampling the jump cannot make either mistake, and it
+     * means the reward for a well-timed jump is that the ink is simply *there*.
+     */
+    function inkFor(p, built, x0) {
+      if (p.solve === "duck") {
+        /* Under the bar, at the height a ducking runner's centre passes through. */
+        const n = 3;
+        for (let i = 0; i < n; i++) {
+          drops.push({ x: x0 + (built.width / (n - 1)) * i, y: GROUND - DUCK_H / 2,
+                       r: 8, taken: false });
+        }
+        return;
+      }
+      /* A bobbing strike has no fixed line through it, so baiting one would be a trap. */
+      if (p.solve === "time") return;
+
+      const hold = p.solve === "hold";
+      const air = hold ? AIR_HOLD : AIR_TAP;
+      const n = 4;
       for (let i = 0; i < n; i++) {
-        const t = n === 1 ? 0.5 : i / (n - 1);
-        const arc = Math.sin(t * Math.PI);
-        drops.push({ x: x0 + width * 0.5 + (t - 0.5) * (width + 78),
-                     y: low ? peak : GROUND - 40 - arc * (GROUND - 40 - peak),
-                     r: 8, taken: false });
+        /* Centre the arc on the obstacle, so the apex of the jump and the apex of the ink
+           are the same point. */
+        const t = ((i + 0.5) / n) * air;
+        drops.push({ x: x0 + built.width / 2 + (t - air / 2) * speed,
+                     y: centreAt(t, hold), r: 8, taken: false });
       }
     }
 
     function spawnLine() {
-      /* A flat run of drops on an empty stretch, so there is always something to chase. */
+      /* Free ink on an empty stretch, so there is always something to chase. Only laid when
+         the stretch really is empty: a line that crossed an obstacle read as the game
+         inviting you into it, which is most of what "messy" meant. */
       const n = 3 + Math.floor(Math.random() * 4);
-      const y2 = GROUND - 46 - Math.random() * 70;
-      for (let i = 0; i < n; i++) drops.push({ x: W + 40 + i * 44, y: y2, r: 8, taken: false });
+      const span = (n - 1) * speed * 8;
+      if (gapLeft < span + speed * 24) { dropCooldown = 30; return; }
+      const y2 = GROUND - 46 - Math.random() * 60;
+      for (let i = 0; i < n; i++) {
+        drops.push({ x: W + 40 + i * speed * 8, y: y2, r: 8, taken: false });
+      }
       dropCooldown = 150 + Math.random() * 160;
     }
 
@@ -381,7 +464,9 @@ EN.Games.marginrunner = (function () {
        arrives long before the interesting part of the difficulty curve. */
     function hit(o) {
       if (invuln > 0 || dying) return;
-      lastHit = { kind: o.kind, top: o.y, h: o.h, shielded: true };
+      lastHit = { kind: o.kind, pattern: o.pattern, top: Math.round(o.y),
+                  h: Math.round(o.h), chapter, speed: Math.round(speed * 10) / 10,
+                  grounded, airborne: !grounded, shielded: true };
       if (shield) {
         shield = false;
         invuln = SHIELD_INVULN;
@@ -481,8 +566,10 @@ EN.Games.marginrunner = (function () {
         /* ── pace ──
            Chapters step the speed; distance nudges it inside a chapter. Capped, because a
            runner stops being a game of skill once it outruns human reaction time. */
-        const want = 5.0 + (chapter - 1) * 0.82 + Math.min(1.1, dist / 11000);
-        speed += (Math.min(9.8, want) - speed) * 0.02;
+        /* Capped at 8.4 rather than 9.8. The visible track is 442px, so the cap decides how
+           much warning the last chapter gives: 8.4 leaves 53 frames of it, and 9.8 left 45. */
+        const want = 5.0 + (chapter - 1) * 0.62 + Math.min(1.0, dist / 12000);
+        speed += (Math.min(8.4, want) - speed) * 0.02;
         dist += speed;
         if (frame % 6 === 0) addScore(1);
         if (Math.floor(dist / CHAPTER_EVERY) + 1 > chapter && chapter < CHAPTERS) nextChapter();
@@ -819,7 +906,8 @@ EN.Games.marginrunner = (function () {
     live = () => ({
       y, vy, grounded, ducking, diving, chapter, speed, score, dist,
       combo, bestCombo, collected, nearMisses, shield, invuln, ended, dying, lastHit,
-      obstacles: obstacles.map(o => ({ kind: o.kind, x: o.x, y: o.y, w: o.w, h: o.h })),
+      obstacles: obstacles.map(o => ({ kind: o.kind, pattern: o.pattern,
+                                       x: o.x, y: o.y, w: o.w, h: o.h })),
       drops: drops.length, parts: parts.length, floats: floats.length,
       runnerTop: y - (ducking && grounded ? DUCK_H : RUN_H)
     });
@@ -834,7 +922,15 @@ EN.Games.marginrunner = (function () {
     /* Test seam. Null between runs. */
     state: () => (live ? live() : null),
     geometry: { W, H, GROUND, RUN_X, RUN_W, RUN_H, DUCK_H, DUCK_BAR_BOTTOM,
-                GRAV, JUMP_V, HOLD_G, HOLD_MAX, NEAR_PX, COMBO_CAP, CHAPTERS,
-                patterns: PATTERNS.map(p => ({ id: p.id, from: p.from })) }
+                GRAV, JUMP_V, HOLD_G, HOLD_MAX, MAX_FALL, AIR_TAP, AIR_HOLD,
+                NEAR_PX, COMBO_CAP, CHAPTERS, SPEED_MIN: 5.0, SPEED_MAX: 8.4,
+                patterns: PATTERNS.map(p => ({ id: p.id, from: p.from,
+                                               solve: p.solve, recover: p.recover })) },
+    /* Build a pattern at a given speed, so the suite can check that the jump it asks for
+       is actually wide enough to cross it — at the slowest speed AND the fastest. */
+    buildAt: (id, sp) => {
+      const p = PATTERNS.find(x => x.id === id);
+      return p ? p.build(sp) : null;
+    }
   };
 })();

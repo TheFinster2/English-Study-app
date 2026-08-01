@@ -29,7 +29,8 @@ const { harness } = require("../lib/browser");
 /* Jump, optionally holding, and report how high the runner actually got. */
 const APEX = `(async (holdMs, alsoTapDuckFirst) => {
   const S = () => EN.Games.marginrunner.state();
-  const pads = document.querySelectorAll(".run-btn");
+  const pads = { 0: document.querySelector('[data-act="jump"]'),
+                 1: document.querySelector('[data-act="duck"]') };
   const down = (n, id) => n.dispatchEvent(new PointerEvent("pointerdown",
     { bubbles: true, cancelable: true, pointerId: id }));
   const up = id => document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: id }));
@@ -119,6 +120,85 @@ module.exports = {
       t.ok(reachHigh <= g.GROUND - 122,
            "the highest ink arc is inside the runner's reach at the held apex");
 
+      /* ── solvability: the jump a pattern asks for must outlast the crossing ──
+         This is the assertion the "impossible to avoid" report turned into. A pattern is
+         only fair if the jump it demands keeps the runner clear for the WHOLE time the
+         obstacle is passing, not merely at first contact — and that has to hold at the
+         slowest speed and the fastest, because the crossing takes fewer frames as the page
+         speeds up while the jump takes exactly as many. Three patterns failed it:
+           staples  — a 34px pair took ~20 frames to cross against a 15-frame tap window,
+                      so it did not fit in a tap jump at ANY spacing
+           gauntlet — fixed pixel offsets, fair at 5px/frame and lethal at 8.4
+           strike   — cleared the top of its bob by one pixel */
+      const solve = await page.evaluate(() => {
+        const G = EN.Games.marginrunner.geometry;
+        /* The same integration step() uses. */
+        const rise = (t, hold) => {
+          let v = G.JUMP_V, y = 0, left = hold ? G.HOLD_MAX : 0;
+          for (let i = 0; i < t; i++) {
+            let g = G.GRAV;
+            if (left > 0 && v < 0) { g = G.HOLD_G; left--; }
+            v = Math.min(G.MAX_FALL, v + g);
+            y = Math.min(0, y + v);
+          }
+          return -y;
+        };
+        const out = [];
+        G.patterns.forEach(p => {
+          if (p.solve !== "tap" && p.solve !== "hold") return;
+          const hold = p.solve === "hold";
+          const air = hold ? G.AIR_HOLD : G.AIR_TAP;
+          [G.SPEED_MIN, G.SPEED_MAX].forEach(sp => {
+            const built = EN.Games.marginrunner.buildAt(p.id, sp);
+            const ground = built.obs.filter(o => o.y + o.h >= G.GROUND - 4)
+              .sort((x, y) => x.x - y.x);
+            if (!ground.length) return;
+            /* Obstacles closer together than one airborne window are taken by the SAME
+               jump; anything further apart is a separate jump, which is how `gauntlet` is
+               built. Clustering matters: treating a pattern as one jump reported gauntlet
+               as needing a 60-frame jump it was never meant to need. */
+            const clusters = [[ground[0]]];
+            for (let i = 1; i < ground.length; i++) {
+              const prev = clusters[clusters.length - 1];
+              const gapFrames = (ground[i].x - (prev[prev.length - 1].x + prev[prev.length - 1].w)) / sp;
+              if (gapFrames < air) prev.push(ground[i]);
+              else clusters.push([ground[i]]);
+            }
+            clusters.forEach((cl, ci) => {
+              const need = G.GROUND - Math.min.apply(null, cl.map(o => o.y));
+              const x1 = Math.min.apply(null, cl.map(o => o.x));
+              const x2 = Math.max.apply(null, cl.map(o => o.x + o.w));
+              let from = -1, to = -1;
+              for (let t = 0; t <= 80; t++) {
+                if (rise(t, hold) > need) { if (from < 0) from = t; to = t; }
+              }
+              const windowFrames = from < 0 ? 0 : to - from;
+              const crossing = (x2 - x1 + G.RUN_W) / sp;
+              out.push({ id: p.id + (clusters.length > 1 ? "#" + (ci + 1) : ""), sp,
+                         kind: "jump", window: windowFrames,
+                         crossing: Math.round(crossing * 10) / 10,
+                         slack: Math.round((windowFrames - crossing) * 10) / 10 });
+              /* And between clusters: land, see the next one, press. */
+              if (ci > 0) {
+                const prev = clusters[ci - 1];
+                const gapFrames = (x1 - (prev[prev.length - 1].x + prev[prev.length - 1].w)) / sp;
+                out.push({ id: p.id + "#" + ci + "→" + (ci + 1), sp, kind: "recover",
+                           window: Math.round(gapFrames * 10) / 10, crossing: air,
+                           slack: Math.round((gapFrames - air) * 10) / 10 });
+              }
+            });
+          });
+        });
+        return out;
+      });
+      solve.forEach(r => {
+        t.atLeast(r.slack, 3,
+          r.id + " at " + r.sp + "px/frame is clearable for the whole crossing " +
+          "(" + r.window + "-frame window vs " + r.crossing + "-frame crossing)");
+      });
+      t.note("  solvability: " + solve.map(r =>
+        r.id + "@" + r.sp + " +" + r.slack + "f").join(" · "));
+
       /* ── the input regression ── */
       const whileDucking = await apexOf(320, true);
       t.ok(whileDucking > STACK,
@@ -129,7 +209,8 @@ module.exports = {
       await h.goto(page, "/arcade/marginrunner", 800);
       const played = await page.evaluate(async () => {
         const S = () => EN.Games.marginrunner.state();
-        const pads = document.querySelectorAll(".run-btn");
+        const pads = { 0: document.querySelector('[data-act="jump"]'),
+                 1: document.querySelector('[data-act="duck"]') };
         const down = (n, id) => n.dispatchEvent(new PointerEvent("pointerdown",
           { bubbles: true, cancelable: true, pointerId: id }));
         const up = id => document.dispatchEvent(new PointerEvent("pointerup",
@@ -193,7 +274,8 @@ module.exports = {
       await rp.evaluate(() => { EN.State.data.coins = 90000; EN.Arcade.buy("marginrunner", "t30"); });
       await h.goto(rp, "/arcade/marginrunner", 900);
       const still = await rp.evaluate(async () => {
-        const pads = document.querySelectorAll(".run-btn");
+        const pads = { 0: document.querySelector('[data-act="jump"]'),
+                 1: document.querySelector('[data-act="duck"]') };
         pads[0].dispatchEvent(new PointerEvent("pointerdown",
           { bubbles: true, cancelable: true, pointerId: 1 }));
         await new Promise(r => setTimeout(r, 400));

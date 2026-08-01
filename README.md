@@ -137,8 +137,10 @@ line in this app that matters most.
   Letter Crush is a match-3 with gravity, cascades and three specials that combine, and it
   always has a word to fill — SATIRE, ARTIST, STRAIT — from the six letters its tiles use.
   Margin Runner is a nib running down a ruled page: variable jump height, coyote time, a
-  jump buffer and a dive, with ink drops arranged in arcs *over* the obstacles so the safe
-  line and the scoring line are different lines
+  jump buffer and a dive, with ink laid along the trajectory that solves each obstacle, so
+  the safe line and the scoring line are different lines. Pattern internals are measured in
+  frames rather than pixels, and every one is checked to be clearable for the whole crossing
+  at both ends of the speed range
 
 403 multiple-choice questions, each with a worked explanation. 60 band-tagged paragraphs.
 62 free-text prompts with model answers and near-misses. 14 essay puzzles, 42 topic
@@ -255,8 +257,18 @@ Every assertion in here exists because something was actually wrong:
   `geometry` constants for the suite. Testing it through the pixels was tried first, on the
   principle that what is DRAWN is what matters, and it measured the word "Foolscap" — the
   chapter label, the ink drops and the floating scores all pass through the runner's column.
-  What the suite holds is the design, because it is a set of numbers that contradict each
-  other the moment one moves: a tap apex of **59px** clears a 40px footnote and cannot clear
+  Its most valuable check is **solvability**: for every pattern, at the slowest speed and the
+  fastest, the jump the pattern demands has to keep the runner clear for the *whole* crossing
+  and not merely at first contact — and obstacles are clustered into the jumps that actually
+  take them, because treating a pattern as one jump reported `gauntlet` as needing a 60-frame
+  jump it was never meant to need. That check caught four separately unavoidable
+  configurations after "impossible to avoid" was reported: a 34px `staples` pair took 20
+  frames to cross against a 15-frame tap window, so it did not fit in a tap jump at *any*
+  spacing; `gauntlet` used fixed pixel offsets, fair at 5px/frame and lethal at 8.4; the
+  `strike` cleared the top of its bob by one pixel; and a plain `footnote` — the simplest
+  obstacle in the game — had **1.7 frames** of tolerance at opening speed.
+  The rest of what the suite holds is the design, because it is a set of numbers that
+  contradict each other the moment one moves: a tap apex of **59px** clears a 40px footnote and cannot clear
   the 78px stack, a held apex of **110px** can, a hanging bar catches a standing runner and
   misses a ducking one inside a 24px window, and the near-miss threshold sits under the
   duck's clearance so a duck cannot pay it for free. It also holds one input regression: a
