@@ -1175,3 +1175,8 @@ h2.ea-pool-head.spent{ display:none; }
   backdrop-filter:blur(14px) saturate(1.2);
   box-shadow:0 10px 30px rgba(0,0,0,.4);
 }
+
+/* A notice that is actually a warning. Used when writes to storage are failing, which is
+   the one message in the app the student must not scroll past. */
+.notice-bad{ border-left-color:var(--bad);
+  background:color-mix(in srgb,var(--bad) 10%,transparent); }

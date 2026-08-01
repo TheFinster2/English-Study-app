@@ -97,10 +97,50 @@ EN.State = (function () {
      on top of the file just imported and silently discarding it. */
   let frozen = false;
 
+  /* ── when the disk is full ────────────────────────────────────
+     This used to be a console.warn and nothing else, which is the worst possible handling
+     of the worst possible failure: once localStorage is full every subsequent write fails
+     silently, so the student keeps playing, keeps earning, and loses all of it — and the
+     one place the problem was reported is the one place they will never look.
+
+     Storage fills for a real reason here rather than a hypothetical one: the Draft Desk
+     holds essay-length text and nothing caps it. So a failed write now says so, once, in
+     words that tell them what to do about it, and leaves a flag Settings can show.
+
+     `saveFailed` is deliberately NOT in the save file. It describes the storage, not the
+     student, and persisting it would mean writing to the thing that just refused a write. */
+  let saveFailed = null;
+  let toldAboutFailure = false;
+
   function write() {
     if (frozen) return;
-    try { localStorage.setItem(KEY, JSON.stringify(data)); }
-    catch (e) { console.warn("Could not save progress.", e); }
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+      if (saveFailed) { saveFailed = null; toldAboutFailure = false; }
+      return true;
+    } catch (e) {
+      /* Every browser names the quota error differently; the code and the name both move,
+         so treat any write failure as full rather than trying to match on the message. */
+      saveFailed = e && e.name ? e.name : "unknown";
+      console.warn("Could not save progress — storage is probably full.", e);
+      if (!toldAboutFailure && EN.UI && EN.UI.toast) {
+        toldAboutFailure = true;
+        EN.UI.toast({
+          icon: "⚠", kind: "bad", ms: 12000,
+          text: "<b>Your progress is not being saved.</b> This device's storage for the app " +
+                "is full. Export your save and your drafts from Settings, then delete a few drafts."
+        });
+      }
+      return false;
+    }
+  }
+
+  /** Did the last write fail? Settings surfaces this; nothing else should need it. */
+  const storageFailing = () => saveFailed;
+
+  /** Roughly how much room the save is taking, in bytes. */
+  function saveSize() {
+    try { return JSON.stringify(data).length; } catch (e) { return 0; }
   }
 
   /** Replace the whole save with an imported one. The caller reloads immediately. */
@@ -656,6 +696,6 @@ EN.State = (function () {
     freeTextEligible, markFreeText, freeTextDay,
     checkAchievements, achievementStats,
     daily, dailySpec, progressDaily, claimDaily,
-    saveDraft, deleteDraft, reset
+    saveDraft, deleteDraft, reset, storageFailing, saveSize
   };
 })();

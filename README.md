@@ -210,6 +210,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `a11y` | browser | keyboard play, dialog semantics, and what gets announced |
 | `calibrate` | browser | run the 49 hand-labelled responses; report where the app and a marker disagree |
 | `arcade` | browser | the arcade plays, and pays nothing |
+| `storage` | browser | a full disk is detected, announced, and recovered from |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -242,6 +243,13 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `storage` — a refused write used to be a `console.warn` and nothing else, so a student
+  with a full disk kept playing and kept earning and lost all of it. Writing the test taught
+  two things guesswork had wrong: a full disk does not break every write, because replacing
+  the save key with a same-sized value frees the old one first — the failure is the save
+  *growing*, which is what a draft does. And filling with 256 KB chunks proves nothing about
+  whether a 2 KB save still fits, so the fill shrinks until even 128 bytes are refused. The
+  first version of this test got both wrong and passed a completely broken app.
 - `a11y` — three modes had no `js-next`/`js-submit` class, so the global Enter binding
   could not reach them and they were quietly mouse-only. Modals had no dialog semantics and
   no focus trap. And every timer needed `aria-live="off"`: a chip that changes once a second

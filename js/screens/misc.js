@@ -101,6 +101,7 @@ EN.Screens.misc = (function () {
     view.appendChild(U.el("div", { class: "card" }, [
       U.el("p", { class: "tiny muted",
         text: "Everything lives in this browser's storage — no account, no server, nothing leaves the device. Clearing site data deletes it, so export before you switch phones." }),
+      storageRow(),
       U.el("div", { class: "row", style: "margin-top:10px; flex-wrap:wrap" }, [
         U.el("button", { class: "btn btn-ghost btn-sm", text: "⬇ Export save", on: { click: exportSave } }),
         U.el("button", { class: "btn btn-ghost btn-sm", text: "⬆ Import save", on: { click: importSave } }),
@@ -181,6 +182,36 @@ EN.Screens.misc = (function () {
     if (!t.length) return "No texts chosen yet";
     return t.length + " text" + (t.length === 1 ? "" : "s") + " · " +
            EN.Bank.quotes().length + " quotes in play";
+  }
+
+  /**
+   * How much room the save is taking, and whether writes are currently failing.
+   *
+   * A full localStorage means every write silently fails and the student keeps earning
+   * progress that is never stored. State.write() now says so in a toast the first time it
+   * happens; this is the place they can check afterwards, and the place that says what to
+   * do — drafts are the only part of the save large enough to be worth deleting.
+   */
+  function storageRow() {
+    const bytes = S.saveSize();
+    const kb = Math.round(bytes / 1024);
+    const drafts = (S.data.drafts || []).length;
+    const draftKb = Math.round(JSON.stringify(S.data.drafts || []).length / 1024);
+    const failing = S.storageFailing();
+
+    const row = U.el("div", { class: failing ? "notice notice-bad" : "kv",
+                              style: "margin-top:10px" });
+    if (failing) {
+      row.appendChild(U.el("b", { text: "Your progress is not being saved. " }));
+      row.appendChild(U.el("span", {
+        text: "This browser refused the last write, which usually means its storage for " +
+              "the app is full. Export below while you still can, then delete some drafts — " +
+              "they are " + draftKb + " KB of the " + kb + " KB total." }));
+      return row;
+    }
+    row.appendChild(U.el("span", { text: "Save size" }));
+    row.appendChild(U.el("b", { text: kb + " KB" + (drafts ? "  ·  " + drafts + " drafts, " + draftKb + " KB" : "") }));
+    return row;
   }
 
   const themeName = id => (EN.DATA.themes.find(t => t.id === id) || { name: id }).name;
