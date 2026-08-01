@@ -630,6 +630,12 @@ select.tin{ appearance:none; -webkit-appearance:none; cursor:pointer; }
 
 /* ---------- reference screens ---------- */
 .ref-nav{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+/* The reference search sits above the tabs and stays put while the results scroll —
+   a lookup you have to scroll back up to correct is a lookup you abandon. */
+.ref-search{ position:sticky; top:8px; z-index:5; margin-bottom:12px;
+  background:var(--card); box-shadow:0 6px 18px -12px rgba(0,0,0,.55); }
+.ref-search::-webkit-search-cancel-button{ cursor:pointer; }
+.ref-results{ min-height:40vh; }
 .tech-item{ padding:14px 16px; border-radius:14px; border:1px solid var(--line); background:var(--card); }
 .tech-head{ display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; margin-bottom:7px; }
 .tech-name{ font-weight:700; font-size:15px; }

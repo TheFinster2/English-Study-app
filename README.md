@@ -211,6 +211,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `calibrate` | browser | run the 49 hand-labelled responses; report where the app and a marker disagree |
 | `arcade` | browser | the arcade plays, and pays nothing |
 | `storage` | browser | a full disk is detected, announced, and recovered from |
+| `search` | browser | the reference is searchable, and the right thing comes first |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -243,6 +244,11 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `search` — asserts ranking, not existence. Groups printed in a fixed running order, so
+  "power" led with Techniques and buried the concept actually named Power; and a matched
+  poem printed its quotes and then the Quotes group printed the same three lines again
+  underneath. The dedupe check counts the quotes it found first, because a dedupe test that
+  matched nothing at all would pass.
 - `storage` — a refused write used to be a `console.warn` and nothing else, so a student
   with a full disk kept playing and kept earning and lost all of it. Writing the test taught
   two things guesswork had wrong: a full disk does not break every write, because replacing
