@@ -42,6 +42,15 @@ EN.Screens.vault = (function () {
 
     /* Filters. Text and concept, plus a due-only toggle. */
     view.appendChild(U.el("h2", { text: "Browse the Vault" }));
+
+    /* Three hundred quotes behind three chips and a 200-row cap meant the only way to
+       reach a particular line was to remember roughly where it sat in the list. The box
+       searches the line itself, its speaker, its locus, its techniques and its concepts —
+       "compass" and "conceit" and "Act 2" are all things a student half-remembers. */
+    const box = U.el("input", { class: "tin vault-search", type: "search", autocomplete: "off",
+      "aria-label": "Search your quotes", placeholder: "Search your quotes…" });
+    view.appendChild(box);
+
     const filters = U.el("div", { class: "vault-filters", style: "margin-bottom:10px" });
     filters.appendChild(chipBtn("All texts", !filter.text, () => { filter.text = null; UI.handleRoute(); }));
     EN.Bank.activeTexts().forEach(t =>
@@ -50,33 +59,108 @@ EN.Screens.vault = (function () {
       () => { filter.dueOnly = !filter.dueOnly; UI.handleRoute(); }));
     view.appendChild(filters);
 
-    let list = EN.Bank.filterQuotes({ texts: filter.text ? [filter.text] : null });
+    /* The concept row was declared in `filter` and never rendered, so the field existed
+       and did nothing. Only concepts actually present in the student's pool appear, most
+       common first — a filter that returns nothing is worse than an absent one. */
+    const base = EN.Bank.filterQuotes({ texts: filter.text ? [filter.text] : null });
+    const counts = {};
+    base.forEach(q => (q.concepts || []).forEach(c => (counts[c] = (counts[c] || 0) + 1)));
+    const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 10);
+    if (filter.concept && !counts[filter.concept]) filter.concept = null;
+    if (top.length) {
+      const crow = U.el("div", { class: "vault-filters", style: "margin-bottom:10px" });
+      crow.appendChild(chipBtn("Any concept", !filter.concept,
+        () => { filter.concept = null; UI.handleRoute(); }));
+      top.forEach(id => {
+        const c = EN.DATA.concepts.find(x => x.id === id);
+        crow.appendChild(chipBtn((c ? c.icon + " " + c.name : id) + " " + counts[id],
+          filter.concept === id, () => { filter.concept = id; UI.handleRoute(); }));
+      });
+      view.appendChild(crow);
+    }
+
+    let list = base;
+    if (filter.concept) list = list.filter(q => (q.concepts || []).includes(filter.concept));
     if (filter.dueOnly) {
       const dueIds = new Set(due.map(q => q.id));
       list = list.filter(q => dueIds.has(q.id));
     }
 
     const wrap = U.el("div", { class: "vault-list" });
-    list.slice(0, 200).forEach(q => {
+    const foot = U.el("p", { class: "tiny muted" });
+    view.appendChild(wrap);
+    view.appendChild(foot);
+
+    /* Only the list is repainted as the student types, so the caret stays where it is and
+       the page does not jump back to the top on every keystroke. */
+    let debounce = null;
+    box.addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(paint, 110); });
+    box.addEventListener("keydown", e => { if (e.key === "Escape") { box.value = ""; paint(); } });
+    UI.onLeave(() => clearTimeout(debounce));
+    paint();
+
+    function paint() {
+      const shown = matching(list, box.value);
+      wrap.innerHTML = "";
+      foot.textContent = "";
+      shown.slice(0, 200).forEach(q => wrap.appendChild(rowFor(q)));
+      if (!shown.length) {
+        wrap.appendChild(U.el("div", { class: "empty" }, [
+          U.el("div", { class: "empty-ico", text: "🗝️" }),
+          U.el("p", { text: box.value.trim() ? "No quote of yours matches “" + box.value.trim() + "”."
+                          : filter.dueOnly ? "Nothing due with that filter."
+                                           : "No quotes match that filter." })
+        ]));
+      } else if (shown.length > 200) {
+        foot.textContent = "Showing the first 200 of " + shown.length + ". Narrow it with a filter or the search box.";
+      } else if (box.value.trim()) {
+        foot.textContent = shown.length + " of " + list.length + " — Esc to clear.";
+      }
+    }
+
+    function rowFor(q) {
       const st = S.data.srs[q.id];
-      const box = st ? st.box : 0;
+      const bx = st ? st.box : 0;
       const isDue = !st || U.daysBetween(st.due, U.dayKey()) >= 0;
       const row = U.el("button", { class: "vault-row", type: "button" }, [
-        U.el("span", { class: "vault-box" + (isDue ? " vault-due" : ""), data: { box: String(box) },
-                       text: box ? String(box) : "·" }),
+        U.el("span", { class: "vault-box" + (isDue ? " vault-due" : ""), data: { box: String(bx) },
+                       text: bx ? String(bx) : "·" }),
         U.el("span", { class: "vault-row-q", html: U.highlight(q.text, q.span) }),
         U.el("span", { class: "tiny muted vault-locus", title: q.locus || "", text: q.locus || "" })
       ]);
       row.addEventListener("click", () => UI.go("/vault/card/" + q.id));
-      wrap.appendChild(row);
+      return row;
+    }
+  }
+
+  /* ── searching the pool ────────────────────────────────────
+     Deliberately plain substring matching over a normalised haystack, not the fuzzy
+     marker: a student searching their own quotes wants the ones containing the word they
+     typed, and a near-miss here is noise rather than generosity. */
+  const norm = s => String(s || "").toLowerCase()
+    .replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
+  const HAY = new Map();
+  function hay(q) {
+    if (HAY.has(q.id)) return HAY.get(q.id);
+    /* Padded, and matched as a word PREFIX below. Bare substring matching found "act"
+       inside "practice", so a search for "act 2" returned a third of the Vault. */
+    const s = " " + norm([q.text, q.speaker, q.locus, q.textTitle,
+                    (q.techniques || []).map(EN.Bank.techniqueName).join(" "),
+                    (q.concepts || []).map(id =>
+                      (EN.DATA.concepts.find(c => c.id === id) || {}).name || id).join(" "),
+                    q.effect].join(" ")) + " ";
+    HAY.set(q.id, s);
+    return s;
+  }
+
+  function matching(list, query) {
+    const tokens = norm(query).split(" ").filter(Boolean);
+    if (!tokens.length) return list;
+    return list.filter(q => {
+      const h = hay(q);
+      return tokens.every(tk => h.indexOf(" " + tk) >= 0);
     });
-    if (!list.length) wrap.appendChild(U.el("div", { class: "empty" }, [
-      U.el("div", { class: "empty-ico", text: "🗝️" }),
-      U.el("p", { text: filter.dueOnly ? "Nothing due with that filter." : "No quotes match that filter." })
-    ]));
-    view.appendChild(wrap);
-    if (list.length > 200) view.appendChild(U.el("p", { class: "tiny muted",
-      text: "Showing the first 200 of " + list.length + ". Narrow it with a text filter." }));
   }
 
   function chipBtn(label, on, fn) {

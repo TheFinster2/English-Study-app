@@ -250,7 +250,9 @@ EN.Screens.reference = (function () {
         else if (k.indexOf(" " + q) >= 0) best = Math.max(best, 40);
         else if (k.indexOf(q) >= 0) best = Math.max(best, 25);
       }
-      if (!best && e.bodyN.indexOf(q) >= 0) best = 8;
+      /* Word prefix, not bare substring: "act" is inside "practice", and a body match is
+         already the weakest signal without also being the loosest. */
+      if (!best && (" " + e.bodyN).indexOf(" " + q) >= 0) best = 8;
       if (!best) return 0;
       total += best;
     }

@@ -116,6 +116,66 @@ module.exports = {
         }
       }
 
+      /* ── the Vault ──
+         Three hundred quotes behind three chips and a 200-row cap. Same idea, narrower
+         pool: the student's own quotes, matched on the line, the speaker, the locus, the
+         techniques and the concepts. */
+      await page.setViewportSize({ width: 390, height: 844 });
+      await h.goto(page, "/vault", 700);
+      const vrows = () => page.evaluate(() => ({
+        n: document.querySelectorAll("#view .vault-row").length,
+        first: (document.querySelector("#view .vault-row .vault-row-q") || {}).textContent || "",
+        ov: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      }));
+      const all = await vrows();
+      t.atLeast(all.n, 50, "the Vault lists the student's quotes");
+
+      await page.fill("#view .vault-search", "compass");
+      await page.waitForTimeout(260);
+      const compass = await vrows();
+      t.ok(compass.n > 0 && compass.n < all.n, "searching a word in a quote narrows the list");
+      t.ok(/stiff twin/i.test(compass.first), "  and finds the compasses conceit by its subject");
+      t.eq(compass.ov, 0, "  with no overflow at 390px");
+
+      /* Word prefix, not bare substring — "act" lives inside "practice", and matching it
+         there turned a search for "act 2" into a third of the Vault. */
+      const loose = await page.evaluate(() => {
+        const q = EN.Bank.quotes();
+        return q.filter(x => /practice|exact|impact/i.test(
+          [x.text, x.effect, x.locus].join(" "))).length;
+      });
+      await page.fill("#view .vault-search", "act 2");
+      await page.waitForTimeout(260);
+      const act = await vrows();
+      t.ok(act.n < all.n / 4, "“act 2” is a narrow search, not a third of the Vault (" +
+                              act.n + " of " + all.n + "; " + loose + " decoys in the pool)");
+
+      await page.fill("#view .vault-search", "qqzzxx");
+      await page.waitForTimeout(260);
+      t.ok(await page.evaluate(() => !!document.querySelector("#view .vault-list .empty")),
+           "a Vault search that matches nothing says so");
+
+      await page.fill("#view .vault-search", "");
+      await page.waitForTimeout(260);
+      t.eq((await vrows()).n, all.n, "clearing the box restores the full list");
+      t.ok(await page.evaluate(() => document.activeElement.classList.contains("vault-search")),
+           "and the Vault box keeps focus while the list repaints under it");
+
+      /* The concept filter was a field on the filter object that nothing ever rendered. */
+      const applied = await page.evaluate(() => {
+        const rows = Array.from(document.querySelectorAll("#view .vault-filters"));
+        const chip = rows.length > 1 && Array.from(rows[1].querySelectorAll(".chip-btn"))[1];
+        if (!chip) return null;
+        const label = chip.textContent;
+        chip.click();
+        return label;
+      });
+      t.ok(!!applied, "the Vault offers concept filters");
+      await page.waitForTimeout(600);
+      const narrowed = await vrows();
+      t.ok(narrowed.n > 0 && narrowed.n < all.n,
+           "  and “" + applied + "” actually narrows the list (" + narrowed.n + " of " + all.n + ")");
+
       t.eq(page.errors.slice(0, 3), [], "console and page errors");
       await page.close();
     } finally {
