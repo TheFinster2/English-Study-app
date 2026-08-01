@@ -54,6 +54,38 @@ const FIND_MOVE = `(() => {
   return null;
 })()`;
 
+/**
+ * Wait until the board has finished resolving, rather than for a fixed number of
+ * milliseconds.
+ *
+ * A hard-coded wait broke the moment the animations were deliberately slowed: a move now
+ * takes about 1.2s, the suite waited 900ms, so half the clicks landed mid-cascade, were
+ * correctly ignored by the game, and the suite reported the GAME as broken. Poll for quiet
+ * instead — nothing popping, no effect layer, and a score that has stopped moving — so the
+ * next timing change cannot produce a false failure.
+ */
+async function settle(page, capMs) {
+  const cap = capMs || 8000;
+  const started = Date.now();
+  let lastScore = null, stable = 0;
+  while (Date.now() - started < cap) {
+    const st = await page.evaluate(() => ({
+      /* The game's own resolving flag, mirrored onto the board. Polling for "no tiles
+         popping" was FALSE-IDLE between phases — during the fall nothing is popping and
+         the score has not moved yet, so the wait returned mid-cascade. */
+      busy: !!document.querySelector(".crush-board[data-busy]") ||
+            document.querySelectorAll(".crush-cell.popping").length > 0 ||
+            document.querySelectorAll(".crush-fx").length > 0,
+      score: Number((document.querySelector(".gmeta .chip") || {}).textContent) || 0
+    }));
+    if (!st.busy && st.score === lastScore) { if (++stable >= 3) return st.score; }
+    else stable = 0;
+    lastScore = st.score;
+    await page.waitForTimeout(90);
+  }
+  return lastScore;
+}
+
 module.exports = {
   name: "arcade",
   needsBrowser: true,
@@ -95,7 +127,9 @@ module.exports = {
       /* ── play it ── */
       let moves = 0, combos = 0, scoredMoves = 0, broke = null;
       let sawSpecial = false, maxScore = 0, words = 0;
-      for (let step = 0; step < 45 && !broke; step++) {
+      /* 30, not 45: each move now waits for the board rather than a flat 900ms, so the
+         suite would otherwise grow with the animation length. */
+      for (let step = 0; step < 30 && !broke; step++) {
         const found = await page.evaluate(FIND_MOVE);
         if (!found) { broke = "no legal move on the board after " + moves + " moves"; break; }
         if (found.combo) combos++;
@@ -109,9 +143,9 @@ module.exports = {
               x.style.getPropertyValue("--c") === String(cc));
             if (n) n.click();
           }, [r, c]);
-          await page.waitForTimeout(80);
+          await page.waitForTimeout(120);
         }
-        await page.waitForTimeout(900);
+        await settle(page);
         moves++;
 
         const st = await page.evaluate(() => ({
@@ -132,7 +166,7 @@ module.exports = {
       }
 
       t.ok(!broke, "the board stayed intact through " + moves + " moves" + (broke ? " — " + broke : ""));
-      t.atLeast(moves, 20, "moves played");
+      t.atLeast(moves, 18, "moves played");
       t.atLeast(scoredMoves / Math.max(1, moves), 0.8, "share of legal moves that scored");
       t.ok(sawSpecial, "specials appear during normal play");
       t.atLeast(maxScore, 1000, "score accumulates");

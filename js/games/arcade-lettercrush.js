@@ -63,9 +63,33 @@ EN.Games.lettercrush = (function () {
   /* Cascade names. Escalating callouts are the cheapest fun in the genre. */
   const CALLOUTS = ["", "", "Nice", "Sharp", "Fluent", "Eloquent", "Virtuoso", "Unmarkable"];
 
+  /* ── TIMING ────────────────────────────────────────────────────
+     Every one of these must be LONGER than the CSS animation it waits for, and the first
+     version got that backwards: the pop keyframe ran for 200ms and gravity fired at 190ms,
+     the beam ran for 420ms and the whole clear finished in about 360ms. The effects were
+     not merely quick, they were being cut off part-way and replaced by the next phase — so
+     the fix is not only bigger numbers, it is ordering.
+
+     Paired with the durations in css/styles.css under "Letter Crush". If you change one,
+     change both: the comment there names this table. */
+  const T = {
+    swap:    300,   // tile slide           — CSS .24s
+    revert:  380,   // illegal swap, there and back
+    pop:     360,   // tiles bursting       — CSS .3s
+    fall:    420,   // gravity + refill     — CSS .34s
+    beat:    120,   // a pause between cascade steps, so a chain reads as steps
+    special: 640,   // dwell while a beam or shockwave plays before its tiles go — CSS .52s
+    ink:     900,   // the Inkblot crosses the whole board — CSS .8s
+    shuffle: 520
+  };
+  /* Reduced motion collapses all of it, but never to zero: a couple of frames of gap keeps
+     the resolve loop from re-entering synchronously. See `wait` inside start(). */
+
   function start(root, cfg) {
     const host = EN.Arcade.shell(root, Object.assign({}, cfg, { onTimeUp: () => end() }));
     const reduced = EN.FX.isReduced();
+    /** A phase length, or a couple of frames when motion is off. */
+    const wait = key => (reduced ? 16 : T[key]);
 
     let grid = [];               // grid[r][c] = cell | null
     let score = 0, cascade = 0, sel = null, busy = false, ended = false;
@@ -108,6 +132,22 @@ EN.Games.lettercrush = (function () {
                             : t.ch;
       cell.node.setAttribute("aria-label",
         t.ch + (cell.kind ? " " + cell.kind : "") + " tile");
+    }
+
+    /**
+     * Set the resolving flag, and mirror it onto the board.
+     *
+     * Two reasons it is on the DOM and not just in a closure. The board takes no input
+     * while a cascade resolves and previously said nothing about it — a tap during the
+     * fall was silently dropped, which reads as the game missing your input. Now the CSS
+     * dims it slightly and refuses pointer events, so it looks deliberate. It also gives
+     * tests/suites/arcade.js something to wait on: polling for "no tiles popping" was
+     * false-idle between phases, and the suite reported the game as broken when it was
+     * merely mid-fall.
+     */
+    function setBusy(v) {
+      busy = v;
+      if (v) board.dataset.busy = "1"; else delete board.dataset.busy;
     }
 
     /** Position a tile. The transition on --r/--c is what animates every movement. */
@@ -253,19 +293,19 @@ EN.Games.lettercrush = (function () {
       const runs = findRuns();
       if (!runs.length && !a.kind && !b.kind) {
         /* Illegal: put them back, and say so with a wobble rather than nothing. */
-        busy = true;
+        setBusy(true);
         EN.Sound.mismatch();
         a.node.classList.add("nudge"); b.node.classList.add("nudge");
         setTimeout(() => {
           swap(r1, c1, r2, c2);
           place(a, r1, c1); place(b, r2, c2);
           a.node.classList.remove("nudge"); b.node.classList.remove("nudge");
-          busy = false;
-        }, reduced ? 0 : 190);
+          setBusy(false);
+        }, wait("revert"));
         return;
       }
 
-      busy = true;
+      setBusy(true);
       cascade = 0;
       const pre = [];
       if (combo) pre.push(...fireCombo(a, b, r2, c2));
@@ -273,7 +313,12 @@ EN.Games.lettercrush = (function () {
         if (a.kind) pre.push(...fireSpecial(a, r2, c2));
         if (b.kind) pre.push(...fireSpecial(b, r1, c1));
       }
-      setTimeout(() => resolve(pre), reduced ? 0 : 170);
+      /* A special that just went off gets its effect time BEFORE its tiles disappear —
+         this is the line that made the beam visible. An Inkblot crosses the whole board, so
+         it gets longer still. */
+      const firedInk = (a.kind === "ink" || b.kind === "ink");
+      const dwell = pre.length ? (firedInk ? "ink" : "special") : "swap";
+      setTimeout(() => resolve(pre), wait(dwell));
     }
 
     function swap(r1, c1, r2, c2) {
@@ -352,7 +397,7 @@ EN.Games.lettercrush = (function () {
       const runs = findRuns();
       const extra = forced || [];
       if (!runs.length && !extra.length) {
-        busy = false;
+        setBusy(false);
         host.clock();
         if (!anyMove()) return shuffle();
         armHint();
@@ -428,7 +473,7 @@ EN.Games.lettercrush = (function () {
         if (!cell) return;
         cell.node.classList.add("popping");
         const n = cell.node;
-        setTimeout(() => n.remove(), reduced ? 0 : 200);
+        setTimeout(() => n.remove(), wait("pop"));
         grid[r][c] = null;
       });
 
@@ -443,8 +488,10 @@ EN.Games.lettercrush = (function () {
       setTimeout(() => {
         if (ended) return;
         gravity();
-        setTimeout(() => resolve(null), reduced ? 0 : 200);
-      }, reduced ? 0 : 190);
+        /* A beat after the fall, so a five-step cascade reads as five things happening
+           rather than one long blur. */
+        setTimeout(() => resolve(null), wait("fall") + (reduced ? 0 : T.beat));
+      }, wait("pop"));
     }
 
     /** Drop what is left, then refill from above the board so new tiles fall in. */
@@ -558,7 +605,7 @@ EN.Games.lettercrush = (function () {
       pop.style.left = ((c + 0.5) / N * 100) + "%";
       pop.style.top = ((r + 0.5) / N * 100) + "%";
       board.appendChild(pop);
-      setTimeout(() => pop.remove(), 800);
+      setTimeout(() => pop.remove(), 1250);
     }
 
     function say(text) {
@@ -591,7 +638,7 @@ EN.Games.lettercrush = (function () {
       }
       board.appendChild(n);
       n.addEventListener("animationend", () => n.remove());
-      setTimeout(() => n.remove(), 1200);           // belt and braces if the event is missed
+      setTimeout(() => n.remove(), 1600);           // belt and braces if the event is missed
     }
 
     /** Nudge the whole board. Level 1 for a special, 2 for a combo or a deep cascade. */
@@ -624,7 +671,7 @@ EN.Games.lettercrush = (function () {
 
     /** No moves left is a dead board, which is a bug from the player's side. Reshuffle. */
     function shuffle() {
-      busy = true;
+      setBusy(true);
       EN.UI.toast({ icon: "🔀", text: "No moves — reshuffling." });
       EN.Sound.erase();
       let guard = 0;
@@ -635,7 +682,7 @@ EN.Games.lettercrush = (function () {
         for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) grid[r][c] = flat[r * N + c];
       } while ((findRuns().length || !anyMove()) && guard++ < 80);
       repaintPositions(false);
-      setTimeout(() => { busy = false; host.clock(); armHint(); }, reduced ? 0 : 320);
+      setTimeout(() => { setBusy(false); host.clock(); armHint(); }, wait("shuffle"));
     }
 
     /* ── end ────────────────────────────────────────────────────── */
