@@ -135,7 +135,10 @@ line in this app that matters most.
   a file. No XP, no Marks, no marking, no one reading over your shoulder
 - **The Arcade** — three games rented with Marks that pay **nothing but a high score**.
   Letter Crush is a match-3 with gravity, cascades and three specials that combine, and it
-  always has a word to fill — SATIRE, ARTIST, STRAIT — from the six letters its tiles use
+  always has a word to fill — SATIRE, ARTIST, STRAIT — from the six letters its tiles use.
+  Margin Runner is a nib running down a ruled page: variable jump height, coyote time, a
+  jump buffer and a dive, with ink drops arranged in arcs *over* the obstacles so the safe
+  line and the scoring line are different lines
 
 403 multiple-choice questions, each with a worked explanation. 60 band-tagged paragraphs.
 62 free-text prompts with model answers and near-misses. 14 essay puzzles, 42 topic
@@ -215,6 +218,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `nextup` | browser | the home screen's recommendation ladder is ordered, and its routes go somewhere |
 | `glossary` | browser | the terms an explanation uses are explained where it uses them |
 | `motion` | browser | a device asking for less motion is honoured, and can be overridden |
+| `runner` | browser | Margin Runner's jump, its obstacles and its rewards agree with each other |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -247,6 +251,17 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `runner` — Margin Runner is a canvas, so it exposes a read-only `state()` and its
+  `geometry` constants for the suite. Testing it through the pixels was tried first, on the
+  principle that what is DRAWN is what matters, and it measured the word "Foolscap" — the
+  chapter label, the ink drops and the floating scores all pass through the runner's column.
+  What the suite holds is the design, because it is a set of numbers that contradict each
+  other the moment one moves: a tap apex of **59px** clears a 40px footnote and cannot clear
+  the 78px stack, a held apex of **110px** can, a hanging bar catches a standing runner and
+  misses a ducking one inside a 24px window, and the near-miss threshold sits under the
+  duck's clearance so a duck cannot pay it for free. It also holds one input regression: a
+  document-level `pointerup` that released both controls turned a held jump into a tap the
+  moment you let go of Duck.
 - `motion` — reported twice as "I can only see the Letter Crush animations for about a
   frame", and it was not a duration. `prefers-reduced-motion: reduce` on the device was an
   absolute veto no in-app setting could lift, and the Motion row was a boolean switch
