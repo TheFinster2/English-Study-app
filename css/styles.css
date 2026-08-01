@@ -467,6 +467,10 @@ textarea.tin{ min-height:96px; line-height:1.6; resize:vertical; font-family:inh
   font-size:14px; line-height:1.65; border-left:3px solid var(--accent); max-width:70ch; }
 .vault-filters{ display:flex; gap:6px; flex-wrap:wrap; }
 .vault-search{ margin-bottom:10px; }
+
+/* ---------- do this next ---------- */
+.next-up{ border-color:color-mix(in srgb,var(--accent) 34%,var(--line)); }
+.next-ico{ flex:none; font-size:26px; line-height:1; }
 .vault-list{ display:grid; gap:8px; }
 .vault-row{ display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:13px;
   border:1px solid var(--line); background:var(--card); cursor:pointer; text-align:left; width:100%;

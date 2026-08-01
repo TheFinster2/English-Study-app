@@ -212,6 +212,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `arcade` | browser | the arcade plays, and pays nothing |
 | `storage` | browser | a full disk is detected, announced, and recovered from |
 | `search` | browser | the reference is searchable, and the right thing comes first |
+| `nextup` | browser | the home screen's recommendation ladder is ordered, and its routes go somewhere |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -244,6 +245,12 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `nextup` — asserts the *order* of the ladder, by building the save each rung needs on top
+  of the previous one: the mistakes rung is only meaningful because the due-cards rung ran
+  first and its setup silenced the Vault. Each route is followed in the save that produced
+  it, because Mistake Rehab renders an empty state once the backlog is gone and checking
+  the routes afterwards tested the wrong screen. It also holds the evidence floor: a module
+  with nine answers must not be called weak.
 - `search` — asserts ranking, not existence. Groups printed in a fixed running order, so
   "power" led with Techniques and buried the concept actually named Power; and a matched
   poem printed its quotes and then the Quotes group printed the same three lines again
