@@ -276,10 +276,36 @@ EN.Screens.draft = (function () {
       draft.updated = now();
       /* saveDraft touches stats.draftWords and calls State.save(). It does NOT award. */
       S.saveDraft(draft);
-      S.flush();
+      /* This is the one screen where a refused write costs the student something they
+         cannot get back, and it is also the screen most likely to cause one: an essay is
+         the biggest thing the save ever grows by. So the chip reports what actually
+         happened rather than what was attempted, `dirty` stays set so a later write
+         catches up, and Export is offered — it needs no storage at all. */
+      if (S.flush() === false) { failSave(); return; }
       dirty = false;
       savedChip.textContent = "saved";
+      savedChip.classList.remove("bad");
       savedChip.classList.add("good");
+    }
+
+    let warnedUnsaved = false;
+    function failSave() {
+      savedChip.textContent = "NOT SAVED";
+      savedChip.classList.remove("good");
+      savedChip.classList.add("bad");
+      if (warnedUnsaved) return;
+      warnedUnsaved = true;
+      shell.body.insertBefore(U.el("div", { class: "notice notice-bad" }, [
+        U.el("b", { text: "This draft is not being saved. " }),
+        U.el("span", { text: "The device's storage for the app is full, so it only exists " +
+                             "in this tab — closing it loses the writing. Export it now, then " +
+                             "delete a few old drafts from the Draft Desk." }),
+        U.el("button", { class: "btn btn-primary btn-sm", style: "margin-top:10px",
+          text: "⬇ Export this draft now",
+          on: { click: () => { draft.body = area.value; draft.title = titleIn.value.trim();
+                               exportOne(draft); } } })
+      ]), shell.body.firstChild);
+      EN.Sound.error();
     }
 
     function paintCounts() {

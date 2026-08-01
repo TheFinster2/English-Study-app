@@ -113,7 +113,7 @@ EN.State = (function () {
   let toldAboutFailure = false;
 
   function write() {
-    if (frozen) return;
+    if (frozen) return true;
     try {
       localStorage.setItem(KEY, JSON.stringify(data));
       if (saveFailed) { saveFailed = null; toldAboutFailure = false; }
@@ -162,11 +162,13 @@ EN.State = (function () {
 
   /** Write immediately, cancelling any pending debounce. Called on visibilitychange
       and pagehide: mobile browsers reclaim backgrounded tabs without warning, and a
-      student mid-paragraph in the Draft Desk must not lose it. */
+      student mid-paragraph in the Draft Desk must not lose it.
+      Returns whether the write actually landed, so the Draft Desk can stop claiming
+      "saved" over text that is only in memory. */
   function flush() {
     clearTimeout(saveTimer);
     saveTimer = null;
-    write();
+    return write();
   }
 
   function emit() { listeners.forEach(fn => fn(data)); save(); }
