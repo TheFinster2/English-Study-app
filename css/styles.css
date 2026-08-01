@@ -414,6 +414,13 @@ mark{ background:var(--mark-bg); color:var(--mark-ink); border-radius:3px; paddi
 .feedback.no{ border-left-color:var(--bad); }
 .feedback b{ color:var(--ink); }
 
+/* Glossary chips inside a feedback panel. Separated by a rule rather than a heading —
+   it is an offer, not a second thing to read. */
+.gloss{ margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
+.gloss-row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.gloss-body{ margin-top:10px; }
+.gloss-body .tech-def{ margin-bottom:6px; }
+
 .streakbar{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:13px; }
 .multi{ color:var(--warn); }
 .combo-flash{ animation:pop .4s cubic-bezier(.2,1.8,.4,1); }

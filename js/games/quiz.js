@@ -106,6 +106,10 @@ EN.QuizCore = (function () {
         ])
       ]);
       UI.announce(fb);
+      /* The terms the explanation just used, on demand and in place. Appended to the
+         panel rather than the card so it disappears with the question. */
+      const gloss = UI.glossary([q.q, q.why, q.choices[q.a]].join(" "));
+      if (gloss) fb.appendChild(gloss);
       node.appendChild(fb);
       return fb;
     }

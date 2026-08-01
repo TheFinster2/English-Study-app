@@ -213,6 +213,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `storage` | browser | a full disk is detected, announced, and recovered from |
 | `search` | browser | the reference is searchable, and the right thing comes first |
 | `nextup` | browser | the home screen's recommendation ladder is ordered, and its routes go somewhere |
+| `glossary` | browser | the terms an explanation uses are explained where it uses them |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -245,6 +246,12 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `glossary` — asserts coverage *and* restraint. The obvious implementation matches
+  technique aliases as well as names, and the aliases include "so" and "because": that
+  version matched 218 of 403 questions with "causal conjunction" hit 74 times, which is a
+  wall of chips under every answer. Canonical names of five characters or more give 162 of
+  403 at 1.38 chips each. The suite also holds that opening a definition never changes the
+  route — leaving a run to look something up is the failure the feature replaces.
 - `nextup` — asserts the *order* of the ladder, by building the save each rung needs on top
   of the previous one: the mistakes rung is only meaningful because the due-cards rung ran
   first and its setup silenced the Vault. Each route is followed in the save that produced

@@ -195,6 +195,81 @@ EN.UI = (function () {
   /** Register a cleanup for the current screen (timers, listeners). */
   function onLeave(fn) { currentCleanup = fn; }
 
+  /* ── glossary in the feedback panel ───────────────────────────
+     Two in every five questions explain themselves using a technical term — "chiasmus
+     reverses the terms across the pivot", "the register drops" — and a student who does
+     not know the term learns nothing from the sentence that was supposed to teach them.
+     The glossary was a screen away, and leaving a run to reach it means losing the run.
+
+     So the term comes to them, inline, on demand. This never navigates, never awards and
+     never steals focus: a feedback panel that moves the page out from under someone
+     mid-run is the bug this is careful not to be. */
+  let NAMES = null;
+  function techniqueNames() {
+    if (NAMES) return NAMES;
+    /* Canonical names only, five characters and up. The alts include things like "so"
+       and "because", which appear in three quarters of the explanations in the bank and
+       would turn every panel into a wall of chips. */
+    NAMES = EN.Bank.techniques()
+      .map(t => ({ id: t.id, n: " " + t.name.toLowerCase() + " " }))
+      .filter(x => x.n.length >= 7)
+      .sort((a, b) => b.n.length - a.n.length);
+    return NAMES;
+  }
+
+  /** Technique ids named anywhere in `text`, longest name first. */
+  function techniquesIn(text) {
+    const hay = " " + String(text || "").toLowerCase().replace(/[^a-z0-9]+/g, " ") + " ";
+    const out = [];
+    for (const t of techniqueNames()) {
+      if (hay.indexOf(t.n) >= 0 || hay.indexOf(t.n.slice(0, -1) + "s ") >= 0) out.push(t.id);
+      if (out.length >= 4) break;
+    }
+    return out;
+  }
+
+  /**
+   * A row of glossary chips for the terms used in `text`, or null if it uses none.
+   * Tapping one opens its definition below the row; tapping it again closes it.
+   */
+  function glossary(text) {
+    const ids = techniquesIn(text);
+    if (!ids.length) return null;
+
+    const body = U.el("div", { class: "gloss-body", hidden: true });
+    const row = U.el("div", { class: "gloss-row" },
+      [U.el("span", { class: "tiny muted", text: "Glossary" })]);
+    let open = null;
+
+    ids.forEach(id => {
+      const g = EN.Bank.technique(id);
+      if (!g) return;
+      const chip = U.el("button", { class: "chip chip-btn", type: "button", text: g.name });
+      chip.addEventListener("click", () => {
+        EN.Sound.tap();
+        if (open === id) {
+          open = null;
+          body.hidden = true;
+          chip.classList.remove("on");
+          return;
+        }
+        open = id;
+        row.querySelectorAll(".chip-btn").forEach(c => c.classList.remove("on"));
+        chip.classList.add("on");
+        body.innerHTML = "";
+        body.hidden = false;
+        body.appendChild(U.el("div", { class: "tech-def", text: g.def }));
+        body.appendChild(U.el("div", { class: "tech-effect", text: g.effect }));
+        if ((g.examples || []).length) {
+          body.appendChild(U.el("div", { class: "tech-ex", text: g.examples.join("  ·  ") }));
+        }
+      });
+      row.appendChild(chip);
+    });
+
+    return U.el("div", { class: "gloss" }, [row, body]);
+  }
+
   /* ── header ──────────────────────────────────────────────── */
   function syncHeader() {
     const d = S.data;
@@ -568,5 +643,6 @@ EN.UI = (function () {
   return { route, go, init, handleRoute, syncHeader, applyTheme, toast, modal, closeModal,
            confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse,
            crutch, crutchCost, readTimeFor, rushFloor, rushHint, timeBudget, announce,
+           glossary, techniquesIn,
            MIN_BONUS_ACCURACY, READ_BASE_MS, READ_PER_WORD_MS, READ_CAP_MS };
 })();

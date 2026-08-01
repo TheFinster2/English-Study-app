@@ -79,11 +79,17 @@ module.exports = {
         /* Followed immediately, in the save that produced it — Mistake Rehab renders an
            empty state once the backlog is gone, so checking these routes after the whole
            ladder had run would test the wrong screen. */
-        await h.goto(page, n.go, 800);
-        const st = await page.evaluate(() => ({
-          chars: document.querySelector("#view").textContent.trim().length,
-          ov: document.documentElement.scrollWidth - document.documentElement.clientWidth
-        }));
+        await h.goto(page, n.go, 400);
+        /* Polled, not slept. Cloze Crunch builds a card out of the quote pool and came in
+           just under a fixed 800ms wait often enough to fail the suite for a reason that
+           had nothing to do with the ladder. */
+        const st = await page.evaluate(async () => {
+          const chars = () => document.querySelector("#view").textContent.trim().length;
+          for (let i = 0; i < 40 && chars() < 150; i++)
+            await new Promise(r => setTimeout(r, 100));
+          return { chars: chars(),
+                   ov: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+        });
         t.atLeast(st.chars, 150, "  " + n.go + " renders a screen when followed");
         t.eq(st.ov, 0, "  with no overflow");
         await h.goto(page, "/home", 400);

@@ -244,6 +244,12 @@ EN.Games.technique = (function () {
             text: "Also present in this quote: " +
                   (it.quote.techniques || []).slice(1).map(EN.Bank.techniqueName).join(", ") || "" })
         ]);
+        /* This is the mode where the glossary matters most: the answer IS a term, and the
+           line above lists the other techniques in the quote by name and nothing else. */
+        const gloss = UI.glossary([it.techniqueId]
+          .concat(it.quote.techniques || []).map(EN.Bank.techniqueName).join(" · "));
+        if (gloss) fb.appendChild(gloss);
+
         const isLast = idx >= items.length - 1;
         const next = U.el("button", { class: "btn btn-primary js-next",
           text: isLast ? "See results" : "Next →",
