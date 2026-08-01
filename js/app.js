@@ -34,11 +34,8 @@ EN.BUILD = "1.0.0";
   const set = S.data.settings;
   EN.Sound.setEnabled(set.sound !== false);
   EN.Sound.setVolume(typeof set.volume === "number" ? set.volume : 0.7);
-  /* The in-app toggle and the OS preference are both honoured; either one turns motion
-     off, and neither can turn it back on against the other. */
-  const prefersStill = window.matchMedia &&
-                       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  EN.FX.setReduced(set.motion === false || prefersStill);
+  /* "auto" follows the device; an explicit choice in Settings overrides it either way. */
+  EN.FX.applyMotion(set.motion);
   document.documentElement.dataset.theme = S.data.profile.theme || "marginalia";
 
   /* ── 2. routes ────────────────────────────────────────────── */

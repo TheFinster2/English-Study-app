@@ -58,9 +58,7 @@ EN.Screens.misc = (function () {
       slider("🔊", "Volume", s.volume, v => {
         s.volume = v; EN.Sound.setVolume(v); S.save();
       }, () => EN.Sound.type()),
-      toggle("✨", "Motion and particles",
-             "Off also stops the CSS animations, not just the confetti. Your system's reduced-motion setting is honoured regardless.",
-             s.motion, v => { s.motion = v; EN.FX.setReduced(!v); S.save(); })
+      motionRow()
     ]);
     view.appendChild(av);
 
@@ -141,6 +139,69 @@ EN.Screens.misc = (function () {
       [U.el("span", { text: "Close Reading — extracts are quoted for study and attributed to their composers. This app trains the moves and marks your sentences. Your teacher marks the essay." })]));
 
     /* ── controls ── */
+    /* ── motion ──
+       Three choices rather than a switch, and the reason is a bug that got reported twice:
+       a device with Reduce Motion turned on vetoed every animation in the app, the veto
+       could not be lifted from here, and this row rendered as ON the whole time. The
+       arcade resolved a whole cascade in 41ms — measured — which reads as the game being
+       broken rather than as an accessibility preference being honoured.
+
+       So the effective state is stated in words above the choices, the device's own
+       preference is named when it is doing something, and "Always on" overrides it. */
+    function motionRow() {
+      const still = EN.FX.prefersStill();
+      const off = EN.FX.isReduced();
+      const CHOICES = [
+        ["auto", "Follow my device", still ? "Your device asks for reduced motion, so animations stay off."
+                                           : "Your device has no preference set, so animations play."],
+        ["on",   "Always on", "Play them even if your device asks for reduced motion."],
+        ["off",  "Off", "No animations, no particles — not even the CSS ones."]
+      ];
+
+      const wrap = U.el("div", { class: "srow", style: "display:block" });
+      wrap.appendChild(U.el("div", { class: "row" }, [
+        U.el("span", { class: "srow-ico", text: "✨" }),
+        U.el("div", { style: "flex:1; min-width:0" }, [
+          U.el("b", { text: "Motion and particles" }),
+          U.el("div", { class: "tiny muted",
+            text: off ? "Currently OFF — nothing in the app animates."
+                      : "Currently on." })
+        ]),
+        U.el("span", { class: "chip" + (off ? "" : " on"), text: off ? "off" : "on" })
+      ]));
+
+      if (still && s.motion !== "on") {
+        wrap.appendChild(U.el("div", { class: "tiny muted", style: "margin-top:8px; line-height:1.6",
+          text: "Your device has Reduce Motion switched on — that is a system setting, not " +
+                "something the app did. Choose “Always on” below if you want the animations anyway." }));
+      }
+
+      const row = U.el("div", { class: "row", style: "margin-top:10px; flex-wrap:wrap" });
+      CHOICES.forEach(([val, label, desc]) => {
+        const on = s.motion === val;
+        const b = U.el("button", { class: "chip chip-btn" + (on ? " on" : ""), type: "button",
+                                   title: desc, text: label });
+        b.addEventListener("click", () => {
+          s.motion = val;
+          const r = EN.FX.applyMotion(val);
+          S.save();
+          EN.Sound.select();
+          UI.toast({ icon: "✨", kind: r.off ? undefined : "good",
+                     text: r.off ? "<b>Motion off.</b> " + (val === "auto" && still
+                             ? "Your device asks for reduced motion."
+                             : "Nothing in the app will animate.")
+                         : "<b>Motion on.</b>" + (r.overriding
+                             ? " Overriding your device's reduced-motion setting." : "") });
+          UI.handleRoute();
+        });
+        row.appendChild(b);
+      });
+      wrap.appendChild(row);
+      wrap.appendChild(U.el("div", { class: "tiny muted", style: "margin-top:8px",
+        text: (CHOICES.find(c => c[0] === s.motion) || CHOICES[0])[2] }));
+      return wrap;
+    }
+
     function toggle(icon, label, desc, value, onSet) {
       const btn = U.el("button", { class: "srow", type: "button" }, [
         U.el("span", { class: "srow-ico", text: icon }),

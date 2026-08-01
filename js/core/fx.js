@@ -9,7 +9,13 @@ EN.FX = (function () {
   const ctx = canvas ? canvas.getContext("2d") : null;
   let parts = [];
   let raf = null;
-  let reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* Does the DEVICE ask for less motion? Kept separate from whether the app is currently
+     animating, because the two answers differ whenever the student overrides the device,
+     and Settings has to be able to say which is which. */
+  const prefersStill = () => !!(window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  let reduced = prefersStill();
 
   function resize() {
     if (!canvas) return;
@@ -115,6 +121,27 @@ EN.FX = (function () {
       try { document.documentElement.dataset.motion = reduced ? "off" : "on"; } catch (e) { /* ignore */ }
     },
     isReduced() { return reduced; },
+    prefersStill,
+
+    /**
+     * Resolve the three-valued Motion setting against the device, and apply it.
+     *
+     * "auto" follows the device. "on" and "off" are the student saying otherwise, and
+     * they WIN — including over the device. The device preference used to be an absolute
+     * veto no in-app setting could lift, which meant a student whose phone had Reduce
+     * Motion on had no way to see the arcade animate and nothing on screen explaining
+     * why; the Motion switch read ON the whole time.
+     */
+    applyMotion(setting, deviceAsksForStill) {
+      /* The device preference is a parameter with a default rather than a closure read,
+         so the whole six-cell matrix of (setting × device) can be exercised without
+         reloading the page under six different emulated media states. */
+      const still = deviceAsksForStill === undefined ? prefersStill() : !!deviceAsksForStill;
+      const on = setting === "on";
+      const off = setting === "off" || (!on && still);
+      this.setReduced(off);
+      return { off, overriding: on && still };
+    },
 
     /** Small pop at a screen point — correct answers. */
     pop(x, y) { burst(x, y, { count: 14, speed: 4, size: 3.5, life: 42, shape: "circle" }); },

@@ -214,6 +214,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `search` | browser | the reference is searchable, and the right thing comes first |
 | `nextup` | browser | the home screen's recommendation ladder is ordered, and its routes go somewhere |
 | `glossary` | browser | the terms an explanation uses are explained where it uses them |
+| `motion` | browser | a device asking for less motion is honoured, and can be overridden |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -246,6 +247,12 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `motion` — reported twice as "I can only see the Letter Crush animations for about a
+  frame", and it was not a duration. `prefers-reduced-motion: reduce` on the device was an
+  absolute veto no in-app setting could lift, and the Motion row was a boolean switch
+  rendering a field that defaulted to true — so it read ON while a whole cascade resolved
+  in **41ms** against 1206ms. The suite holds the full six-cell matrix of setting × device,
+  the legacy migration in both directions, and that Settings states the *effective* state.
 - `glossary` — asserts coverage *and* restraint. The obvious implementation matches
   technique aliases as well as names, and the aliases include "so" and "because": that
   version matched 218 of 403 questions with "causal conjunction" hit 74 times, which is a

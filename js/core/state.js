@@ -38,7 +38,13 @@ EN.State = (function () {
     achievements: {},
     history: {},
     scores: {},
-    settings: { sound: true, motion: true, volume: 0.7, difficulty: "standard",
+    /* motion is deliberately three-valued: "auto" follows the device, "on" and "off" are
+       the student overriding it. A boolean could not tell "I never touched this" from
+       "I want animations", so the device preference silently won and the switch in
+       Settings read ON while the app ran with every animation off.
+       Strings rather than "auto"/true/false so the migration below stays idempotent —
+       a deliberate `true` and a legacy default `true` are indistinguishable. */
+    settings: { sound: true, motion: "auto", volume: 0.7, difficulty: "standard",
                 layerC: false, onboarded: false },
     daily: { day: null, progress: 0, claimed: false, spec: null },
     weekly: { week: null, baseline: null, quests: [], claimed: [] },
@@ -75,7 +81,24 @@ EN.State = (function () {
       console.warn("Save file unreadable, starting fresh.", e);
       data = DEFAULT();
     }
+    migrate();
     return data;
+  }
+
+  /** One-way fixes for saves written by an older shape. */
+  function migrate() {
+    /* motion used to be a boolean whose default was true. `true` therefore means "never
+       chosen", not "wanted", so it becomes "auto" and behaviour is unchanged. Reading it
+       as an explicit yes would switch animations on for a student who set Reduce Motion
+       on their device on purpose, which is the opposite mistake. `false` was always a
+       deliberate choice and becomes "off".
+       The new values are strings, so this cannot fire on a save it already converted —
+       the first version mapped `true` to "auto" on every load and quietly threw away the
+       student's "Always on" every time they reopened the app. */
+    const s = data.settings;
+    if (s.motion === true) s.motion = "auto";
+    else if (s.motion === false) s.motion = "off";
+    else if (["auto", "on", "off"].indexOf(s.motion) < 0) s.motion = "auto";
   }
 
   /** Merge an imported/older save onto the current default shape, so a save from a
