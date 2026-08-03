@@ -314,7 +314,11 @@ kbd,.kbd{ font-size:11px; padding:1px 5px; border-radius:5px; border:1px solid v
 .bq blockquote{ margin:0; font-size:17px; line-height:1.62; font-style:italic; color:var(--ink);
   max-width:66ch; overflow-wrap:break-word; }
 .bq figcaption{ margin-top:9px; font-size:12px; color:var(--ink-faint); font-style:normal;
-  font-family:"Segoe UI",system-ui,sans-serif; }
+  font-family:"Segoe UI",system-ui,sans-serif; display:flex; flex-direction:column; gap:2px; }
+/* The work and its composer read as the heading of the citation, the locus as its detail —
+   two lines rather than one, because at 360px a full citation on one line wraps mid-title. */
+.bq-work{ color:var(--ink-dim); font-weight:700; }
+.bq-loc{ color:var(--ink-faint); }
 .bq-sm blockquote{ font-size:15px; }
 mark{ background:var(--mark-bg); color:var(--mark-ink); border-radius:3px; padding:0 2px;
   /* Long unbroken quotes and mark spans are exactly what pushes a grid child past the
@@ -487,7 +491,9 @@ textarea.tin{ min-height:96px; line-height:1.6; resize:vertical; font-family:inh
 /* A locus can be "Devotions upon Emergent Occasions, Meditation XVII", which at 360px is
    wider than the phone. flex:none on it pushed the whole row past the viewport (§9.2), so
    it shrinks and truncates instead. */
-.vault-locus{ flex:0 1 auto; max-width:34%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.vault-locus{ flex:0 1 auto; max-width:36%; display:flex; flex-direction:column; text-align:right; }
+.vault-locus > *{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.vault-locus b{ color:var(--ink-dim); }
 .vault-box{ flex:none; width:24px; height:24px; border-radius:7px; display:grid; place-items:center;
   font-size:11px; font-weight:800; background:var(--card-2); color:var(--ink-faint);
   font-family:"Segoe UI",system-ui,sans-serif; }

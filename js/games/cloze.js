@@ -93,8 +93,11 @@ EN.Games.cloze = (function () {
 
       const card = U.el("div", { class: "qcard" });
       card.appendChild(U.el("div", { class: "qtag" }, [
-        U.el("span", { class: "chip", text: it.quote.textTitle }),
-        U.el("span", { class: "chip", text: it.quote.locus || "" }),
+        /* The WORK, not the volume: "Holy Sonnet 7" rather than "The Metaphysical Poetry
+           of John Donne", which is what a student would cite and is also what fits. */
+        U.el("span", { class: "chip", text: U.cite(it.quote).work }),
+        U.el("span", { class: "chip", text: it.quote.composer || "" }),
+        U.el("span", { class: "chip", text: U.cite(it.quote).locus }),
         U.el("span", { class: "chip", text: "Box " + it.box }),
         U.el("span", { class: "chip", text: it.cloze.blanks.length + " gap" + (it.cloze.blanks.length === 1 ? "" : "s") })
       ]));
@@ -122,7 +125,7 @@ EN.Games.cloze = (function () {
       });
       card.appendChild(line);
       card.appendChild(U.el("div", { class: "input-hint",
-        text: (it.quote.speaker ? it.quote.speaker + " · " : "") + (it.quote.locus || "") }));
+        text: U.citeLine(it.quote) }));
 
       const submit = U.el("button", { class: "btn btn-primary js-submit", text: "Check" });
       const hintBtn = U.el("button", { class: "pu", type: "button", title: "Reveals the first letter of every gap" }, [

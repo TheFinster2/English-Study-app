@@ -26,15 +26,20 @@ EN.Games.quotematch = (function () {
         const t = (q.techniques || []).find(x => !seenTech.has(x) && EN.Bank.technique(x));
         if (!t) continue;
         seenTech.add(t);
-        out.push({ a: { text: shorten(q.text), title: q.textTitle },
+        out.push({ a: { text: shorten(q.text), title: U.citeLine(q) },
                    b: { text: EN.Bank.techniqueName(t) }, key: q.id });
         if (out.length >= n) break;
       }
     } else if (kind === "quote-character") {
       for (const q of U.shuffle(quotes)) {
-        if (!q.speaker || used.has(q.speaker) || /narrator|stage direction|model sentence/i.test(q.speaker)) continue;
+        /* U.genericSpeaker is the same rule the citation uses. This round used its own
+           narrower regex and so offered "speaker" — which 93 Donne quotes carry — as one of
+           the answers to "who says this". */
+        if (!q.speaker || used.has(q.speaker) ||
+            U.genericSpeaker(q.speaker) || /narrator|stage direction/i.test(q.speaker)) continue;
         used.add(q.speaker);
-        out.push({ a: { text: shorten(q.text), title: q.textTitle },
+        /* Without the speaker: this round IS "who says this". */
+        out.push({ a: { text: shorten(q.text), title: U.citeLine(q, { speaker: false }) },
                    b: { text: q.speaker }, key: q.id });
         if (out.length >= n) break;
       }
@@ -49,7 +54,7 @@ EN.Games.quotematch = (function () {
         const q = quotes.find(x => (x.concepts || []).includes(cn.id) && !used.has(x.id));
         if (!q) continue;
         used.add(q.id);
-        out.push({ a: { text: cn.icon + " " + cn.name }, b: { text: shorten(q.text), title: q.textTitle }, key: cn.id });
+        out.push({ a: { text: cn.icon + " " + cn.name }, b: { text: shorten(q.text), title: U.citeLine(q) }, key: cn.id });
         if (out.length >= n) break;
       }
     }

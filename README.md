@@ -71,6 +71,14 @@ essay architecture, question deconstruction — is text-agnostic and works for a
 Extracts are quoted for study and attributed to their composers: a line, a sentence, a
 short passage. Never a whole poem, never a chapter. Buy the texts.
 
+**Every quote on screen carries its source** — the work, the composer, the locus, and the
+speaker where there is one. For the Donne selection the work is the *poem*, because "The Sun
+Rising, ll. 1–3" is what a student cites and "The Metaphysical Poetry of John Donne" is only
+the volume it ships in. A Vault card will copy the quote with its citation attached, so a
+line reaches an essay without its line reference being retyped from a phone screen. Module C's
+samples are labelled *written for this app*, because they are model sentences rather than
+extracts and nothing should let them be mistaken for one.
+
 ## How marking works
 
 Three layers, in order, and only the first two touch your XP.
@@ -221,6 +229,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `glossary` | browser | the terms an explanation uses are explained where it uses them |
 | `motion` | browser | a device asking for less motion is honoured, and can be overridden |
 | `runner` | browser | Margin Runner's jump, its obstacles and its rewards agree with each other |
+| `cite` | browser | every quote on screen says which work, composer and locus it came from |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -253,6 +262,16 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `cite` — quotes used to be captioned "speaker · locus" and nothing else, so a line could
+  appear in a game reading "Part 2, Ch. 7 — Winston" with no indication of which book. Every
+  quote already had a locus, a speaker and a composer; the gap was entirely in the rendering.
+  Three things were wrong on the first pass and the suite holds all three: the **work** is
+  the poem, not the volume it ships in ("The Sun Rising", not "The Metaphysical Poetry of
+  John Donne") and the poem title has to be stripped from the locus or the citation reads
+  "The Sun Rising — The Sun Rising, ll. 1–3"; a **bare voice note is not an attribution**,
+  since all 93 Donne quotes carry the literal speaker "speaker"; and attribution **must not
+  become a giveaway** — adding the citation to Quote Match printed the speaker on the card in
+  the round whose question is "who says this".
 - `runner` — Margin Runner is a canvas, so it exposes a read-only `state()` and its
   `geometry` constants for the suite. Testing it through the pixels was tried first, on the
   principle that what is DRAWN is what matters, and it measured the word "Foolscap" — the

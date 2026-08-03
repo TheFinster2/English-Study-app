@@ -195,6 +195,29 @@ EN.UI = (function () {
   /** Register a cleanup for the current screen (timers, listeners). */
   function onLeave(fn) { currentCleanup = fn; }
 
+  /**
+   * Put text on the clipboard and say so.
+   *
+   * execCommand is deprecated and it is still the fallback, because the Clipboard API needs
+   * a secure context and this app has to work from file:// — which the Draft Desk found out
+   * first and solved privately. One copy of it, here, so the Vault gets the same behaviour.
+   */
+  function copy(text, said) {
+    const done = () => toast({ icon: "📋", kind: "good", text: said || "Copied." });
+    const fallback = () => {
+      const ta = U.el("textarea", { style: "position:fixed;opacity:0;top:0" });
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); }
+      catch (e) { toast({ icon: "📋", kind: "bad", text: "Could not copy." }); }
+      ta.remove();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else fallback();
+  }
+
   /* ── glossary in the feedback panel ───────────────────────────
      Two in every five questions explain themselves using a technical term — "chiasmus
      reverses the terms across the pivot", "the register drops" — and a student who does
@@ -643,6 +666,6 @@ EN.UI = (function () {
   return { route, go, init, handleRoute, syncHeader, applyTheme, toast, modal, closeModal,
            confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse,
            crutch, crutchCost, readTimeFor, rushFloor, rushHint, timeBudget, announce,
-           glossary, techniquesIn,
+           glossary, techniquesIn, copy,
            MIN_BONUS_ACCURACY, READ_BASE_MS, READ_PER_WORD_MS, READ_CAP_MS };
 })();

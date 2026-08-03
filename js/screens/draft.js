@@ -398,23 +398,9 @@ EN.Screens.draft = (function () {
   }
 
   function copyOut(d, body) {
-    const text = plain(Object.assign({}, d, { body }));
-    const done = () => UI.toast({ icon: "📋", kind: "good", text: "Copied to the clipboard." });
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done, fallback);
-    } else fallback();
-
-    function fallback() {
-      /* execCommand is deprecated but it is the only thing that works from file://
-         without a permission prompt, and this app must work from file://. */
-      const ta = U.el("textarea", { style: "position:fixed;opacity:0;top:0" });
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand("copy"); done(); }
-      catch (e) { UI.toast({ icon: "📋", kind: "bad", text: "Could not copy — use Export instead." }); }
-      ta.remove();
-    }
+    /* UI.copy owns the clipboard fallback now — this screen wrote it first and the Vault
+       needed the same thing, so there is one copy of it in ui.js rather than two. */
+    UI.copy(plain(Object.assign({}, d, { body })), "Copied to the clipboard.");
   }
 
   function ago(ts) {

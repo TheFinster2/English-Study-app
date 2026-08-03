@@ -16,7 +16,9 @@ EN.DATA.texts = EN.DATA.texts || {};
 EN.DATA.texts["craft"] = {
   id: "craft",
   title: "The Craft of Writing",
-  composer: "skills focus",
+  /* Not a person. These are model sentences written for this app, and the citation
+     renders the composer verbatim — "skills focus" read like an attribution. */
+  composer: "written for this app",
   year: null,
   form: "craft",
   modules: ["moduleC"],

@@ -68,14 +68,80 @@ EN.U = (function () {
            escapeHtml(s.slice(b));
   }
 
-  /** Render a quote as a block quote with attribution, optionally highlighting `span`. */
+  /**
+   * Where a quote comes from, in the parts a citation is made of.
+   *
+   * Quotes used to be captioned "speaker · locus" and nothing else, so a line could appear
+   * in a game reading "Part 2, Ch. 7 — Winston" with no indication of which book it was
+   * from. Every quote in the bank has a locus, a speaker and a composer, so there was never
+   * a reason not to say.
+   *
+   * `work` is the POEM rather than the volume where there is one: Donne ships as a
+   * 54-poem selection called "The Metaphysical Poetry of John Donne", and the work a
+   * student cites is "The Sun Rising". The poem's title is usually the start of the
+   * authored locus, so it is stripped from the locus when promoted, or the citation reads
+   * "The Sun Rising — The Sun Rising, ll. 1–3".
+   */
+  /** Is this "speaker" a voice note rather than somebody to attribute a line to?
+      Shared, because Quote Match's quote→speaker round must not offer "speaker" as one of
+      the answers either — all 93 Donne quotes carry it. */
+  const GENERIC_SPEAKER = /^(speaker|narrator|stage direction|model sentence|persona|voice|chorus)$/i;
+  const genericSpeaker = s2 => GENERIC_SPEAKER.test(String(s2 || "").trim());
+
+  function cite(q) {
+    const t = (window.EN && EN.DATA && EN.DATA.texts) ? EN.DATA.texts[q.textId] : null;
+    let work = q.textTitle || (t && t.title) || "";
+    let locus = q.locus || "";
+    if (q.poem && t && t.poems) {
+      const pm = t.poems.find(p => p.id === q.poem);
+      if (pm && pm.title) {
+        work = pm.title;
+        if (locus.indexOf(pm.title + ", ") === 0) locus = locus.slice(pm.title.length + 2);
+        else if (locus === pm.title) locus = "";
+      }
+    }
+    /* A bare voice note is not somebody to attribute a line to. All 93 Donne quotes carry
+       the literal speaker "speaker", which as a citation reads "ll. 1–2 — speaker". The
+       qualified ones are kept, because "narrator (Winston's thought)" tells a student it is
+       free indirect discourse, which is exactly the sort of thing they should cite. */
+    const speaker = genericSpeaker(q.speaker) ? "" : (q.speaker || "");
+    return { work, composer: q.composer || (t && t.composer) || "", locus, speaker,
+             collection: (t && t.poems && t.poems.length) ? (q.textTitle || t.title) : "" };
+  }
+
+  /**
+   * The same thing as one line, for exports and the clipboard.
+   * `opts.speaker === false` leaves the speaker out — Quote Match's quote→speaker round
+   * asks you to name the speaker, and a citation that includes it prints the answer on the
+   * card. Attribution must not become a giveaway.
+   */
+  function citeLine(q, opts) {
+    const c = cite(q);
+    const head = [c.work, c.composer].filter(Boolean).join(", ");
+    const showSpeaker = !opts || opts.speaker !== false;
+    const tail = [c.locus, showSpeaker ? c.speaker : ""].filter(Boolean).join(" — ");
+    return [head, tail].filter(Boolean).join(", ");
+  }
+
+  /**
+   * Render a quote as a block quote with its full attribution, optionally highlighting
+   * `span`. Pass `work:false` where the page heading already names the work — a quote
+   * sheet for one text does not need its title under all sixty quotes.
+   */
   function quoteBlock(q, opts) {
     const o = opts || {};
     const span = o.span === null ? null : (o.span || q.span);
-    const cite = [q.speaker, q.locus].filter(Boolean).join(" · ");
+    const c = cite(q);
+    const lines = [];
+    if (o.work !== false && (c.work || c.composer)) {
+      lines.push(el("span", { class: "bq-work",
+        text: [c.work, c.composer].filter(Boolean).join(" · ") }));
+    }
+    const tail = [c.locus, c.speaker].filter(Boolean).join(" — ");
+    if (tail) lines.push(el("span", { class: "bq-loc", text: tail }));
     return el("figure", { class: "bq" + (o.small ? " bq-sm" : "") }, [
       el("blockquote", { html: highlight(q.text, span) }),
-      cite ? el("figcaption", { text: cite }) : null
+      lines.length ? el("figcaption", {}, lines) : null
     ]);
   }
 
@@ -301,7 +367,7 @@ EN.U = (function () {
   }
 
   return { $, $$, el, clamp, randInt, pick, shuffle, sample, escapeHtml,
-           highlight, quoteBlock, verse, words,
+           highlight, quoteBlock, cite, citeLine, genericSpeaker, verse, words,
            normalise, levenshtein, similarity, tokenise, cloze, FUNCTION_WORDS,
            dayKey, daysBetween, hash, seededRandom, seededShuffle, fmtTime, pct };
 })();

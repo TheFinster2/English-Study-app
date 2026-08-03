@@ -95,8 +95,7 @@ EN.Screens.reference = (function () {
   function quoteCard(q, opts) {
     const o = opts || {};
     return U.el("div", { class: "card" }, [
-      o.where ? U.el("div", { class: "tiny muted", style: "margin-bottom:6px", text: q.textTitle }) : null,
-      U.quoteBlock(q),
+      U.quoteBlock(q, { work: o.work !== false }),
       U.el("div", { class: "row", style: "margin-top:10px" },
         (q.techniques || []).map(x => U.el("span", { class: "chip", text: EN.Bank.techniqueName(x) }))),
       q.effect ? U.el("div", { class: "tech-effect", style: "margin-top:8px", text: q.effect }) : null
@@ -536,7 +535,11 @@ EN.Screens.reference = (function () {
 
     v.appendChild(U.el("h2", { text: "Quote sheet" }));
     const qg = U.el("div", { class: "grid" });
-    (t.quotes || []).forEach(raw => qg.appendChild(quoteCard(EN.Bank.quoteById(raw.id) || raw)));
+    /* Every quote carries its work, even here where the heading already names the text: a
+       student forty quotes down a sheet has scrolled the heading away, and the whole point
+       of this pass is that no quote is ever on screen unattributed. */
+    (t.quotes || []).forEach(raw =>
+      qg.appendChild(quoteCard(EN.Bank.quoteById(raw.id) || raw)));
     v.appendChild(qg);
   }
 

@@ -126,7 +126,12 @@ EN.Screens.vault = (function () {
         U.el("span", { class: "vault-box" + (isDue ? " vault-due" : ""), data: { box: String(bx) },
                        text: bx ? String(bx) : "·" }),
         U.el("span", { class: "vault-row-q", html: U.highlight(q.text, q.span) }),
-        U.el("span", { class: "tiny muted vault-locus", title: q.locus || "", text: q.locus || "" })
+        /* The work as well as the locus: a row reading only "Part 2, Ch. 7" does not say
+           which book, and the Vault mixes every text the student studies. */
+        U.el("span", { class: "tiny muted vault-locus", title: U.citeLine(q) }, [
+          U.el("b", { text: U.cite(q).work }),
+          U.el("span", { text: q.locus || "" })
+        ])
       ]);
       row.addEventListener("click", () => UI.go("/vault/card/" + q.id));
       return row;
@@ -197,6 +202,14 @@ EN.Screens.vault = (function () {
         [1, 2, 3, 4, 5].map(n => U.el("div", { class: "lbox" + (n === st.box ? " on" : ""), text: String(n) })))
     ]));
 
+    /* A quote is only useful in an essay with its citation attached, and retyping a locus
+       from a phone screen is how a wrong line reference gets into a draft. */
+    shell.body.appendChild(U.el("div", { class: "row", style: "margin-bottom:10px" }, [
+      U.el("button", { class: "btn btn-ghost btn-sm", text: "📋 Copy with citation",
+        on: { click: () => UI.copy('"' + q.text + '" (' + U.citeLine(q) + ')',
+                                   "Quote and citation copied.") } })
+    ]));
+
     shell.body.appendChild(U.el("div", { class: "row" }, [
       U.el("button", { class: "btn btn-primary", text: "🕳️ Drill this quote",
         on: { click: () => { view.innerHTML = ""; EN.Games.cloze.start(view, { count: 1, quotes: [q] }); } } }),
@@ -235,7 +248,8 @@ EN.Screens.vault = (function () {
       ]);
       const box = U.el("div", { class: "vcard" }, [
         U.el("div", { class: "vcard-head" }, [
-          U.el("span", { class: "chip", text: q.textTitle }),
+          U.el("span", { class: "chip", text: U.cite(q).work }),
+          U.el("span", { class: "chip", text: q.composer || "" }),
           U.el("span", { class: "chip", text: "Box " + st.box })
         ]),
         body
@@ -250,7 +264,7 @@ EN.Screens.vault = (function () {
         EN.Sound.flip();
         reveal.remove();
         body.appendChild(U.el("div", { class: "vcard-effect" }, [
-          U.el("div", { class: "tiny muted", text: (q.speaker || "") + " · " + (q.locus || "") }),
+          U.el("div", { class: "tiny muted", text: U.citeLine(q) }),
           U.el("div", { style: "margin-top:8px", text: q.effect || "" }),
           U.el("div", { class: "row", style: "margin-top:10px" },
             (q.techniques || []).map(t => U.el("span", { class: "chip", text: EN.Bank.techniqueName(t) })))
