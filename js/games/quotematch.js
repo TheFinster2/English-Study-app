@@ -67,9 +67,17 @@ EN.Games.quotematch = (function () {
   function start(root, cfg) {
     const c = Object.assign({ modeId: "quotematch", title: "🃏 Quote Match",
                               pairs: 6, kind: null, texts: null }, cfg);
-    const kind = KINDS.find(k => k.id === c.kind) || U.pick(KINDS);
+    let kind = KINDS.find(k => k.id === c.kind) || U.pick(KINDS);
     let pairs = buildPairs(kind.id, c.pairs, c.texts);
-    if (pairs.length < 3) pairs = buildPairs("technique-effect", c.pairs, null);
+    /* If the chosen kind cannot be filled — no tagged speakers in the student's texts, or
+       every poem switched off — fall back to the one that needs no quotes. The chip has to
+       fall back WITH it: the board used to announce "Quote → technique" while dealing
+       technique→effect pairs, which reads as the game being broken rather than as it
+       adapting. */
+    if (pairs.length < 3) {
+      pairs = buildPairs("technique-effect", c.pairs, null);
+      if (pairs.length >= 3) kind = KINDS.find(k => k.id === "technique-effect") || kind;
+    }
     if (pairs.length < 3) {
       root.appendChild(U.el("div", { class: "empty" }, [
         U.el("div", { class: "empty-ico", text: "🃏" }),

@@ -34,6 +34,20 @@ at 390px and checked at 360px with zero horizontal scrolling.
 
 ### Publishing it
 
+**Before you push a change to the app itself**, move the version and re-stamp:
+
+```
+# bump EN.BUILD in js/app.js and CACHE in sw.js to the same number, then
+node tests/stamp.js
+```
+
+The service worker is cache-first on a fixed version string, so a device holding the old
+cache serves the **entire** old app forever — not a stale file here and there, all of it.
+Seven deploys went out without that bump and none of them could reach an installed phone,
+while every test passed against the new source. The `offline` suite now hashes the shell and
+stores the hash beside the version, so changing the app without moving the version is a test
+failure with instructions rather than a silent non-delivery.
+
 Push to `main`, then in the repository **Settings → Pages**, set Source to *Deploy from a
 branch*, branch `main`, folder `/ (root)`. That toggle is a manual step — it cannot be
 done from the command line or by an agent, so it is on you. Every path in the app is

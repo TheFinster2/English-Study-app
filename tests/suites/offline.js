@@ -98,14 +98,41 @@ module.exports = {
     t.eq(absShell, [], "absolute src paths in index.html");
 
     /* ── the version moved ────────────────────────────────────────
-       Not a hard failure — a content-only change need not bump it — but the build version
-       in app.js and the cache name in sw.js should not drift apart silently. */
+       The build version in app.js and the cache name in sw.js must not drift apart. */
     const build = /EN\.BUILD\s*=\s*"([^"]+)"/.exec(fs.readFileSync(path.join(ROOT, "js/app.js"), "utf8"));
     t.ok(build, "app.js declares EN.BUILD");
     if (build && cacheName) {
       t.note("build " + build[1] + " · shell cache " + cacheName[1]);
       t.ok(cacheName[1].includes(build[1]),
            "sw.js's cache name contains the build version (bump both together)");
+    }
+
+    /* ── and it moved when the shell CHANGED ──────────────────────
+       This is the check that was missing, and its absence shipped seven deploys the app
+       could never receive. The worker is cache-first on a fixed version string, so a device
+       holding the old cache serves the ENTIRE old app forever — not a stale file here and
+       there, all of it. Nothing in the suite noticed, because every check passed against the
+       new source while every phone ran the old.
+
+       So: hash the shell and store the hash beside the version. If the contents move and the
+       version does not, this fails and says what to do. Regenerate with `node tests/stamp.js`
+       after bumping both constants. */
+    const { fingerprint } = require("../lib/fingerprint");
+    const stampPath = path.join(ROOT, "tests/build-fingerprint.json");
+    t.ok(fs.existsSync(stampPath), "the build fingerprint exists");
+    if (fs.existsSync(stampPath) && build) {
+      const stamp = JSON.parse(fs.readFileSync(stampPath, "utf8"));
+      const now = fingerprint(ROOT);
+      t.note("shell " + now.count + " files, hash " + now.hash +
+             " (stamped " + stamp.version + " / " + stamp.hash + ")");
+      if (stamp.hash === now.hash) {
+        t.eq(stamp.version, build[1], "the fingerprint is stamped for this version");
+      } else {
+        t.ok(stamp.version !== build[1],
+             "the shell changed, so the version must move too — bump EN.BUILD and sw.js's " +
+             "CACHE, then run `node tests/stamp.js` (stamped " + stamp.version +
+             ", now " + build[1] + ")");
+      }
     }
   }
 };

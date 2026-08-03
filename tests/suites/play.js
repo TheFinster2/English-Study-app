@@ -200,6 +200,32 @@ module.exports = {
         t.atLeast(rounds, 3, "boss: rounds played");
         t.ok(sawRewrite, "boss: the Party's rewrite gimmick actually fires within a duel");
         t.ok(!truthPunished, "boss: the genuinely correct answer is rewarded on a falsified round");
+        /* Quote Match names its round on a chip, and falls back to the one round that
+           needs no quotes when the student's selection cannot fill the one it picked. The
+           chip has to fall back with it: the board used to announce "Quote → technique"
+           while dealing technique→effect pairs, which reads as the game being broken rather
+           than as it adapting. Checked with every text switched off, which is the state that
+           forces the fallback and is reachable from the text picker. */
+        const relabel = await page.evaluate(() => {
+          ["common", "moduleB", "moduleC"].forEach(m => EN.State.setSlot(m, null));
+          EN.State.setSlot("moduleA", []);
+          const out = [];
+          ["quote-technique", "quote-character", "concept-quote"].forEach(k => {
+            const v = document.querySelector("#view");
+            v.innerHTML = "";
+            EN.Games.quotematch.start(v, { kind: k, pairs: 6 });
+            out.push({ asked: k,
+                       chip: (document.querySelector(".gmeta .chip") || {}).textContent || "",
+                       cards: document.querySelectorAll("#view .mcard").length });
+          });
+          return out;
+        });
+        relabel.forEach(r => {
+          t.atLeast(r.cards, 6, "quotematch still deals a board asking for " + r.asked);
+          t.eq(r.chip, "Technique → what it does",
+               "  and the chip names the round it actually dealt");
+        });
+
         t.eq(page.errors.slice(0, 3), [], "boss: no thrown or console errors");
         t.note("  party " + rounds + " rounds, rewrite round seen: " + sawRewrite);
         await page.close();
