@@ -100,6 +100,16 @@ EN.Screens.misc = (function () {
       U.el("p", { class: "tiny muted",
         text: "Everything lives in this browser's storage — no account, no server, nothing leaves the device. Clearing site data deletes it, so export before you switch phones." }),
       storageRow(),
+      S.data.dev && S.data.dev.touched
+        ? U.el("div", { class: "notice notice-bad", style: "margin-top:10px" }, [
+            U.el("b", { text: "Modified with the dev tools. " }),
+            U.el("span", { text: S.data.dev.actions + " action" +
+              (S.data.dev.actions === 1 ? "" : "s") + ", last " +
+              new Date(S.data.dev.touched).toLocaleDateString() +
+              ". Levels, Marks, high scores and achievements in this save are not evidence " +
+              "of anything." })
+          ])
+        : null,
       U.el("div", { class: "row", style: "margin-top:10px; flex-wrap:wrap" }, [
         U.el("button", { class: "btn btn-ghost btn-sm", text: "⬇ Export save", on: { click: exportSave } }),
         U.el("button", { class: "btn btn-ghost btn-sm", text: "⬆ Import save", on: { click: importSave } }),
@@ -111,9 +121,7 @@ EN.Screens.misc = (function () {
     /* ── the app itself ── */
     view.appendChild(U.el("h2", { text: "This app" }));
     view.appendChild(U.el("div", { class: "card" }, [
-      U.el("div", { class: "kv" }, [
-        U.el("span", { text: "Version" }), U.el("b", { text: EN.BUILD || "dev" })
-      ]),
+      versionRow(),
       U.el("div", { class: "kv" }, [
         U.el("span", { text: "Offline" }),
         U.el("b", { text: !("serviceWorker" in navigator) ? "not supported here"
@@ -253,6 +261,28 @@ EN.Screens.misc = (function () {
    * happens; this is the place they can check afterwards, and the place that says what to
    * do — drafts are the only part of the save large enough to be worth deleting.
    */
+
+  /* Five taps on the version number opens the dev menu. The deliberate-gesture pattern,
+     because a button here is a button a student finds by scrolling — and a save that has
+     been through those tools says so, both there and below. */
+  function versionRow() {
+    let taps = 0, last = 0;
+    const row = U.el("div", { class: "kv", style: "cursor:default" }, [
+      U.el("span", { text: "Version" }),
+      U.el("b", { text: EN.BUILD || "dev" })
+    ]);
+    row.addEventListener("click", () => {
+      const now = Date.now();
+      taps = now - last > 1200 ? 1 : taps + 1;
+      last = now;
+      if (taps >= 5) { taps = 0; EN.Sound.select(); UI.go("/dev"); }
+      else if (taps >= 3) {
+        UI.toast({ icon: "🛠", ms: 1400, text: (5 - taps) + " more…" });
+      }
+    });
+    return row;
+  }
+
   function storageRow() {
     const bytes = S.saveSize();
     const kb = Math.round(bytes / 1024);

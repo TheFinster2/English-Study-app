@@ -94,7 +94,7 @@ const ROUTES = [
   "/home", "/play", "/vault", "/vault/card", "/reference", "/reference/rubric",
   "/reference/bands", "/reference/concepts", "/reference/essay", "/progress", "/shop",
   "/draft", "/draft/new", "/texts", "/texts/common", "/texts/moduleA",
-  "/texts/poems/donne", "/settings", "/achievements", "/arcade", "/boss",
+  "/texts/poems/donne", "/settings", "/achievements", "/dev", "/arcade", "/boss",
   "/game/rapid", "/game/technique", "/game/cloze", "/game/marking", "/game/essay",
   "/game/quotematch", "/game/bandgrid", "/game/deconstruct", "/game/sayit",
   "/game/thesis", "/game/rewrite", "/game/paper", "/game/drill", "/game/drill/all", "/game/survival",

@@ -254,6 +254,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `skills` | browser | answers are tracked by skill, and every skill leads somewhere that trains it |
 | `paper` | browser | a section runs on one clock, marks nothing until submitted, and pays what it shows |
 | `leech` | browser | a quote missed four times is named, and drilled differently |
+| `dev` | browser | the dev menu does what its buttons say, stamps the save, and is not linked |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -286,6 +287,14 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `dev` — presses **every** button on the dev menu and reads the save rather than the
+  screen, because a menu of buttons that quietly do nothing is worse than no menu. Two had
+  already lied when it was written: "9 of every power-up" called `grantPowerup`, which
+  *accumulates*, so on top of the two a new save starts with it produced ten of two of them;
+  and the first probe could not tell whether "Everything due" worked at all, because a fresh
+  save has no Leitner state and every card is already due — it has to be checked *after*
+  mastering them. It also holds the two promises: nothing links the route, and every action
+  stamps the save.
 - `leech` — a Leitner box resets to 1 on every miss, so a quote you keep failing comes back
   tomorrow and forever, indistinguishable from the forty that are working. `lapses` had been
   counted since the Vault was written and nothing read it. The fix is not suspension —
@@ -373,6 +382,24 @@ Every assertion in here exists because something was actually wrong:
   could not reach them and they were quietly mouse-only. Modals had no dialog semantics and
   no focus trap. And every timer needed `aria-live="off"`: a chip that changes once a second
   is read aloud once a second, which makes a timed mode unusable rather than just unlabelled.
+
+## Testing it
+
+There is a dev menu at `#/dev` for reaching states that would take weeks to earn — set the
+level or the Marks, unlock every theme, make every quote due or five of them leeches, seed a
+lopsided skill profile or a mistake list, grant arcade time, roll the day or the week over,
+and jump straight to any screen. Settings opens it after **five taps on the version number**.
+
+It is not linked from the navigation, and that is the only protection it has: anything
+shipped to a browser can be found by someone who looks, so this is un-stumble-upon-able
+rather than secret. If that matters to you, delete the `UI.route("dev", …)` line in
+`js/app.js` before publishing and the screen becomes unreachable.
+
+**Every action stamps the save**, and both the dev screen and Settings say so afterwards.
+The whole economy of this app is built on numbers being earned, so a level, a high score or
+an achievement that came from that screen has to stay distinguishable from one that did not.
+Take the snapshot at the top before you start and testing costs you nothing — it lives under
+its own storage key, so wiping the save does not take it with it.
 
 ## Your save
 

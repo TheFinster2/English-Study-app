@@ -24,7 +24,7 @@ window.EN = window.EN || {};
 /** Bumped with every deploy. sw.js keeps its own version — they need not match, but a
     release should move both — tests/suites/offline.js fails the build if the shell's
     contents change without the version moving. Re-stamp with `node tests/stamp.js`. */
-EN.BUILD = "1.4.0";
+EN.BUILD = "1.5.0";
 
 (function () {
   const U = EN.U, S = EN.State, UI = EN.UI;
@@ -52,6 +52,8 @@ EN.BUILD = "1.4.0";
   UI.route("texts", EN.Screens.texts.screen);
   UI.route("settings", EN.Screens.misc.settings);
   UI.route("achievements", EN.Screens.misc.achievements);
+  /* Not in the nav. See the header of dev.js for why it is reachable at all. */
+  UI.route("dev", EN.Screens.dev);
   UI.route("boss", EN.Games.boss.start);
 
   /* ── 3. header controls ───────────────────────────────────── */
