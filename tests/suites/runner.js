@@ -149,7 +149,24 @@ module.exports = {
           const hold = p.solve === "hold";
           const air = hold ? G.AIR_HOLD : G.AIR_TAP;
           [G.SPEED_MIN, G.SPEED_MAX].forEach(sp => {
-            const built = EN.Games.marginrunner.buildAt(p.id, sp);
+            /* The WORST build, not a sample of one. Footnote and staples randomise
+               their dimensions, so a single build made this a coin flip: the same check
+               reported 6 frames of slack on one run and 2.8 on the next, and a fairness
+               test that passes three times in four is not a fairness test. */
+            let built = null, hardest = -1;
+            for (let k = 0; k < 40; k++) {
+              const cand = EN.Games.marginrunner.buildAt(p.id, sp);
+              const gr = cand.obs.filter(o => o.y + o.h >= G.GROUND - 4);
+              if (!gr.length) { built = cand; break; }
+              const span = Math.max.apply(null, gr.map(o => o.x + o.w)) -
+                           Math.min.apply(null, gr.map(o => o.x));
+              const tall = G.GROUND - Math.min.apply(null, gr.map(o => o.y));
+              /* Wider costs frames of crossing; taller costs frames of window. Both make
+                 the pattern harder, so the sum is a fair proxy for the worst case. */
+              const cost = span + tall * 4;
+              if (cost > hardest) { hardest = cost; built = cand; }
+            }
+            if (!built) return;
             const ground = built.obs.filter(o => o.y + o.h >= G.GROUND - 4)
               .sort((x, y) => x.x - y.x);
             if (!ground.length) return;

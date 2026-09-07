@@ -106,7 +106,7 @@ EN.Games.marginrunner = (function () {
            38px-wide block takes 12.3 to cross at opening speed — 1.7 frames of tolerance on
            the SIMPLEST obstacle in the game, which is where the two-second deaths came from.
            At 34 the window is 20 frames against 13.2. */
-        const w = 22 + Math.random() * 12, h = 26 + Math.random() * 8;
+        const w = 22 + Math.random() * 10, h = 26 + Math.random() * 6;
         return { obs: [{ kind: "footnote", x: 0, y: GROUND - h, w, h }], width: w };
       } },
     { id: "marginalia", from: 1, recover: 14, solve: "duck", build: () => {

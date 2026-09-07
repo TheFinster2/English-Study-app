@@ -97,7 +97,7 @@ const ROUTES = [
   "/texts/poems/donne", "/settings", "/achievements", "/arcade", "/boss",
   "/game/rapid", "/game/technique", "/game/cloze", "/game/marking", "/game/essay",
   "/game/quotematch", "/game/bandgrid", "/game/deconstruct", "/game/sayit",
-  "/game/thesis", "/game/rewrite", "/game/drill", "/game/drill/all", "/game/survival",
+  "/game/thesis", "/game/rewrite", "/game/paper", "/game/drill", "/game/drill/all", "/game/survival",
   "/game/rehab"
 ];
 

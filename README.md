@@ -145,9 +145,14 @@ line in this app that matters most.
 
 ## What's in it
 
-- **14 study modes** — Rapid Fire, Module Drill, Survival, Mistake Rehab, Technique Hunt,
+- **15 study modes** — Rapid Fire, Module Drill, Survival, Mistake Rehab, Technique Hunt,
   Cloze Crunch, the Marking Desk, the Essay Architect, Quote Match, Band Grid, Question
-  Deconstruction, Say It In One, Thesis Forge, Rewrite Rescue
+  Deconstruction, Say It In One, Thesis Forge, Rewrite Rescue, and **Section I**
+- **Section I** — four short answers, **one clock for all of them**, and nothing marked
+  until you submit. Say It In One marks each sentence as it arrives, which is right for
+  learning a move and wrong for sitting an exam: in an exam you budget one block of time
+  across several questions and nobody tells you anything until it is over. Marked by the
+  same Layer C rubric, out of sixteen, with the criteria behind every mark
 - **5 module bosses** plus **The Final Paper**, each with a gimmick that attacks a
   different habit — an editor who rewrites your answer, a critic who hides the labels
 - **The Quote Vault** — 324 quotes on a five-box Leitner schedule
@@ -245,6 +250,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `runner` | browser | Margin Runner's jump, its obstacles and its rewards agree with each other |
 | `cite` | browser | every quote on screen says which work, composer and locus it came from |
 | `skills` | browser | answers are tracked by skill, and every skill leads somewhere that trains it |
+| `paper` | browser | a section runs on one clock, marks nothing until submitted, and pays what it shows |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -277,6 +283,13 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `paper` — holds the three constraints that *are* the mode (one clock, free navigation with
+  answers preserved, no marking until submit) plus the two things that were wrong when it was
+  written. `UI.results` **displays** a payout and `UI.award` **grants** one; the first version
+  called only the former, so the report showed XP that never reached the save — the suite
+  reads the ledger, not the screen, and was verified by reverting the fix. And `let area` was
+  declared beside `render()` while `render()` ran during setup, so the textarea never
+  appeared: a paper with no way to answer it. Function declarations hoist and `let` does not.
 - `skills` — mastery per module and per text are both true and neither is instruction:
   "Module B 61%" tells you which book to reread and nothing you can do tonight. Answers now
   carry their topic, and the suite holds the two things that make the axis honest — a skill

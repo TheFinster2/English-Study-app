@@ -80,14 +80,50 @@ module.exports = {
       Object.keys(wired).forEach(n =>
         t.ok(wired[n], n + ".js passes a skill to recordAnswer"));
 
+      /* ── typed answers feed the skill axis, and ONLY the skill axis ──
+         recordAnswer also moves stats.answered, module mastery and text mastery, and a
+         four-mark rubric is not the same event as a right-or-wrong multiple choice. So
+         Layer C and the Section Paper go through recordSkill, which touches `topics` and
+         nothing else — otherwise the breakdown was silent about every typed mode in the
+         app, which is most of what a student's marks rest on. */
+      const typed = await page.evaluate(() => {
+        EN.State.data.topics = {};
+        EN.State.data.stats.answered = 0;
+        EN.State.data.modules = {};
+        EN.State.data.texts = {};
+        EN.State.recordSkill("Short answers", true);
+        EN.State.recordSkill("Short answers", false);
+        EN.State.recordSkill("Thesis statements", true);
+        return { topics: EN.State.data.topics,
+                 answered: EN.State.data.stats.answered,
+                 modules: Object.keys(EN.State.data.modules).length,
+                 texts: Object.keys(EN.State.data.texts).length };
+      });
+      t.eq(typed.topics["Short answers"], { seen: 2, correct: 1 },
+           "a typed answer is recorded against its skill");
+      t.eq(typed.answered, 0, "  and does not move the multiple-choice answer count");
+      t.eq(typed.modules, 0, "  nor module mastery");
+      t.eq(typed.texts, 0, "  nor text mastery");
+
+      const typedWired = await page.evaluate(async () => {
+        const out = {};
+        for (const n of ["layerc", "paper"]) {
+          const text = await (await fetch("js/games/" + n + ".js")).text();
+          out[n] = /recordSkill\(/.test(text.replace(/\/\*[\s\S]*?\*\//g, ""));
+        }
+        return out;
+      });
+      t.ok(typedWired.layerc, "layerc.js records a skill for whichever mode is running");
+      t.ok(typedWired.paper, "paper.js records one for every marked answer");
+
       /* ── every skill leads somewhere that trains it ── */
       const routes = await page.evaluate(() => {
-        ["Bands", "Essay structure", "Question analysis"].forEach(x =>
+        EN.Bank.allTopics().forEach(x =>
           EN.State.data.topics[x] = { seen: 20, correct: 9 });
         return EN.Bank.statsByTopic().map(s =>
           ({ name: s.name, route: s.route, inBank: s.inBank }));
       });
-      t.atLeast(routes.length, 11, "the breakdown lists the mode-backed skills once played");
+      t.atLeast(routes.length, 14, "the breakdown lists every skill once played");
 
       for (const r of routes) {
         await h.goto(page, r.route, 1600);

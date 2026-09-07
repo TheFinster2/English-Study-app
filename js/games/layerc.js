@@ -20,6 +20,8 @@ window.EN = window.EN || {};
 EN.Games = EN.Games || {};
 
 EN.Games.layerc = (function () {
+  /* Which skill each of the three modes trains, for the Progress breakdown. */
+  const SKILL = { sayit: "Short answers", thesis: "Thesis statements", rewrite: "Rewriting" };
   const U = EN.U, S = EN.State, UI = EN.UI;
 
   const VERDICT_WORD = {
@@ -60,9 +62,13 @@ EN.Games.layerc = (function () {
 
   function start(root, cfg) {
     const c = Object.assign({ modeId: "sayit", title: "💬 Say It In One",
-                              mode: "sayit", count: 5 }, cfg);
+                              mode: "sayit", count: 5, prompts: null }, cfg);
 
-    let pool = EN.Bank.activeFreeText().filter(p => p.mode === c.mode);
+    /* An explicit set, for a caller that wants specific prompts rather than a draw — the
+       Section Paper does this, and so does the suite when it needs prompts that carry a
+       quote rather than whichever ones the shuffle produced. */
+    let pool = (c.prompts && c.prompts.length) ? c.prompts.slice()
+             : EN.Bank.activeFreeText().filter(p => p.mode === c.mode);
     if (!pool.length) pool = EN.Bank.freeText().filter(p => p.mode === c.mode);
     if (!pool.length) {
       root.appendChild(U.el("div", { class: "empty" }, [
@@ -94,67 +100,11 @@ EN.Games.layerc = (function () {
     shell.body.appendChild(stage);
 
     /* Bring the model up in the background while the student reads the first prompt, so
-       submitting does not wait on a cold load. Failure here is not an error. */
-    let modelState = EN.Mark.available() ? "loading" : "blocked";
-    const banner = U.el("div", { class: "grid" });
-    shell.body.insertBefore(banner, stage);
-    refreshBanner();
-    if (EN.Mark.available()) {
-      EN.Mark.isDownloaded().then(has => {
-        if (!has) { modelState = "notDownloaded"; refreshBanner(); return; }
-        EN.Mark.load().then(ok => { modelState = ok ? "ready" : "failed"; refreshBanner(); });
-      });
-    }
-
-    function refreshBanner() {
-      banner.innerHTML = "";
-      if (modelState === "ready") return;
-      if (modelState === "loading") {
-        banner.appendChild(U.el("div", { class: "lc-verdict unavailable" }, [
-          U.el("div", { class: "tiny", text: "Warming up the sentence marker…" })
-        ]));
-        return;
-      }
-      const why = modelState === "blocked" ? EN.Mark.blockedReason() : modelState;
-      const msg = why === "file"
-        ? "Sentence marking needs the app served over http — it works on your phone install and on the published site, just not by double-clicking the file. You can still write and compare against the model answers."
-        : modelState === "notDownloaded"
-          ? "Sentence marking is switched off. Enable it in Settings — 23 MB, one time, then it works offline forever."
-          : "Sentence marking is unavailable on this device. You can still write and compare against the model answers.";
-      banner.appendChild(U.el("div", { class: "lc-verdict unavailable" }, [
-        U.el("div", { class: "lc-word", text: "Marking unavailable" }),
-        U.el("p", { class: "tiny", text: msg }),
-        /* Opens the download panel in a MODAL rather than navigating to Settings.
-           Going to Settings threw the run away — a student who tapped this while
-           part-way through lost every answer they had given and came back to a fresh
-           run, which reads exactly like being kicked out of the app. The panel is the
-           same one Settings renders, so there is one download flow, not two. */
-        modelState === "notDownloaded"
-          ? U.el("button", { class: "btn btn-sm btn-primary", text: "⬇ Turn on sentence marking",
-              on: { click: () => {
-                UI.modal(U.el("div", {}, [
-                  U.el("h2", { text: "Sentence marking" }),
-                  U.el("p", { class: "tiny muted",
-                    text: "Download it here and this run carries on — nothing you have already answered is lost." }),
-                  EN.Screens.misc.layerCPanel(),
-                  U.el("button", { class: "btn btn-ghost btn-block", style: "margin-top:12px",
-                    text: "Back to the run", on: { click: () => {
-                      UI.closeModal();
-                      /* Re-check on the way out, so a download that finished inside the
-                         modal takes effect for the rest of THIS run. */
-                      if (EN.Mark.available()) {
-                        EN.Mark.isDownloaded().then(has => {
-                          if (!has) return;
-                          modelState = "loading"; refreshBanner();
-                          EN.Mark.load().then(ok => { modelState = ok ? "ready" : "failed"; refreshBanner(); });
-                        });
-                      }
-                    } } })
-                ]));
-              } } })
-          : null
-      ]));
-    }
+       submitting does not wait on a cold load. Failure here is not an error.
+       UI.markerBanner owns the state machine — the Section Paper needs the same one, and
+       two copies of "is the marker available" would drift. */
+    const marker = UI.markerBanner();
+    shell.body.insertBefore(marker.node, stage);
 
     function render() {
       stage.innerHTML = "";
@@ -266,6 +216,9 @@ EN.Games.layerc = (function () {
 
         submitBar.remove();
         S.bump("sentencesMarked");
+        /* The skill axis was silent about every typed mode. recordSkill touches `topics`
+           and nothing else, so module and text mastery stay a record of multiple choice. */
+        S.recordSkill(SKILL[c.mode], (res.total || 0) >= 3);
         if (res.verdict === "nailed") { nailed++; S.bump("sentencesNailed"); EN.Sound.nailed(); }
         else if (res.verdict === "close") { closeN++; EN.Sound.circling(); }
         else if (res.verdict === "unavailable") EN.Sound.unavailable();

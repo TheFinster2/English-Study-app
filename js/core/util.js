@@ -116,10 +116,15 @@ EN.U = (function () {
    * card. Attribution must not become a giveaway.
    */
   function citeLine(q, opts) {
+    const o = opts || {};
     const c = cite(q);
     const head = [c.work, c.composer].filter(Boolean).join(", ");
-    const showSpeaker = !opts || opts.speaker !== false;
-    const tail = [c.locus, showSpeaker ? c.speaker : ""].filter(Boolean).join(" — ");
+    /* `locus:false` as well as `speaker:false`, because some authored loci name the voice
+       themselves — "Part 2, Ch. 9 (Goldstein's book)", "Meditation XVII" against a speaker
+       of "Donne". Dropping the speaker field alone still printed the answer in Quote
+       Match's who-says-this round; measured over the bank, not guessed. */
+    const tail = [o.locus === false ? "" : c.locus,
+                  o.speaker === false ? "" : c.speaker].filter(Boolean).join(" — ");
     return [head, tail].filter(Boolean).join(", ");
   }
 

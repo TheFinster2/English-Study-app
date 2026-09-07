@@ -262,10 +262,16 @@ EN.Bank = (function () {
      to drill: aiming /game/drill at one would filter to nothing, fall back to the whole
      bank, and run under a title claiming to be about bands. Each points at the mode that
      actually trains it instead. */
-  const EXTRA_TOPICS = ["Bands", "Essay structure", "Question analysis"];
+  const EXTRA_TOPICS = ["Bands", "Essay structure", "Question analysis",
+                        "Short answers", "Thesis statements", "Rewriting"];
   const TOPIC_MODE = { "Bands": "/game/bandgrid",
                        "Essay structure": "/game/essay",
-                       "Question analysis": "/game/deconstruct" };
+                       "Question analysis": "/game/deconstruct",
+                       /* Say It In One rather than the Section Paper: the paper is the
+                          rehearsal, the mode is where you practise the move. */
+                       "Short answers": "/game/sayit",
+                       "Thesis statements": "/game/thesis",
+                       "Rewriting": "/game/rewrite" };
 
   /** Where "practise this skill" should send a student. */
   const topicRoute = name =>

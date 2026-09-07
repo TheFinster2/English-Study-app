@@ -1136,7 +1136,16 @@ ul.tight li{ font-size:13px; line-height:1.6; color:var(--ink-dim); margin-botto
    became unreachable at exactly the moment it was needed, because placing the last card
    is when the page is longest. `stuck` is applied only while the puzzle is complete, so
    the bar does not hover over the board for the whole puzzle. */
-.ea-actions.stuck{
+/* ONE sticky bar, four callers. A primary action at the foot of a long form ends up under
+   the floating nav bar, and this had been fixed three times in three near-identical blocks
+   before the Section Paper needed another — the Essay Architect, the Marking Desk, Layer C
+   and the Band Grid each had their own copy of it. The treatment lives here once now and
+   the mode classes only say WHEN it applies. */
+.stuck-bar,
+.ea-actions.stuck,
+.md-actions.stuck,
+.lc-actions.stuck,
+.bg-actions.stuck{
   position:sticky; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 78px);
   z-index:68; padding:10px 12px; margin-top:14px;
   border-radius:16px; border:1px solid var(--line);
@@ -1154,26 +1163,9 @@ h2.ea-pool-head.spent{ display:none; }
 .timer-ring.paused{ opacity:.55; border-style:dashed; animation:none; }
 .timer-ring.paused::after{ content:" ⏸"; font-size:10px; }
 
-/* The Marking Desk's submit, same treatment and same reason as .ea-actions.stuck. */
 .md-actions{ margin-top:14px; }
-.md-actions.stuck{
-  position:sticky; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 78px);
-  z-index:68; padding:10px 12px; border-radius:16px; border:1px solid var(--line);
-  background:color-mix(in srgb,var(--bg-1) 92%,transparent);
-  backdrop-filter:blur(14px) saturate(1.2);
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
 
-/* Layer C's submit. Same as .ea-actions.stuck and .md-actions.stuck — three modes, one
-   bug: a primary action at the foot of a long form ends up under the floating nav bar. */
 .lc-actions{ margin-top:14px; }
-.lc-actions.stuck{
-  position:sticky; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 78px);
-  z-index:68; padding:10px 12px; border-radius:16px; border:1px solid var(--line);
-  background:color-mix(in srgb,var(--bg-1) 92%,transparent);
-  backdrop-filter:blur(14px) saturate(1.2);
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
 
 /* The rush floor, made visible. It counted silently and then told you afterwards that
    your answer had not scored, which reads as arbitrary rather than as a rule. */
@@ -1191,16 +1183,8 @@ h2.ea-pool-head.spent{ display:none; }
   text-decoration:line-through; text-decoration-color:color-mix(in srgb,var(--bad) 70%,transparent); }
 
 /* The Band Grid's submit. Eight rows and a five-column header are taller than a phone, so
-   this measured at y=874 in an 844px viewport. Fourth mode with the same bug; the pattern
-   is now shared by .ea-actions, .md-actions, .lc-actions and this. */
+   this measured at y=874 in an 844px viewport. */
 .bg-actions{ margin-top:14px; }
-.bg-actions.stuck{
-  position:sticky; bottom:calc(max(12px,env(safe-area-inset-bottom)) + 78px);
-  z-index:68; padding:10px 12px; border-radius:16px; border:1px solid var(--line);
-  background:color-mix(in srgb,var(--bg-1) 92%,transparent);
-  backdrop-filter:blur(14px) saturate(1.2);
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
 
 /* A notice that is actually a warning. Used when writes to storage are failing, which is
    the one message in the app the student must not scroll past. */
@@ -1211,3 +1195,26 @@ h2.ea-pool-head.spent{ display:none; }
 .mastery-pick{ width:100%; text-align:left; font:inherit; color:var(--ink); cursor:pointer;
   background:none; border:0; padding:0; }
 .mastery-pick:hover .mastery-name{ color:var(--accent); }
+
+/* ---------- the Section Paper ---------- */
+/* The question strip. Four pips, one clock: which question you are on, which are answered,
+   and a way to any of them — being able to leave a question and come back is half the skill
+   the mode exists to rehearse. */
+.paper-strip{ display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+.paper-pip{ flex:none; width:40px; height:40px; border-radius:11px; cursor:pointer;
+  border:1px solid var(--line); background:var(--card); color:var(--ink-faint);
+  font:inherit; font-weight:800; font-size:14px; transition:.15s; }
+.paper-pip.done{ color:var(--ink); border-color:color-mix(in srgb,var(--good) 45%,transparent); }
+.paper-pip.on{ border-color:var(--accent); color:var(--accent);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent); }
+.paper-total{ text-align:center; padding:18px 16px; margin:4px 0 14px; border-radius:16px;
+  border:1px solid var(--line); background:var(--card-2); }
+.paper-total-num{ font-size:38px; font-weight:800; line-height:1;
+  font-family:"Segoe UI",system-ui,sans-serif; }
+.paper-total-lbl{ font-size:13px; color:var(--ink-faint); margin-top:6px; }
+
+/* The Section Paper's bar is sticky from the start, not once complete: you can submit at
+   any point in a section, and Next is pressed on every question. Three actions on one row
+   at 360px, so the labels are short and Next takes the slack. */
+.paper-actions{ display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; }
+.paper-actions .btn{ min-height:44px; }

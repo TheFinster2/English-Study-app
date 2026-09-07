@@ -20,6 +20,9 @@ EN.Screens.play = (function () {
     { id:"cloze", name:"Cloze Crunch", icon:"🕳️", colour:"var(--warn)", flagship:true, level:1,
       desc:"Type the missing words back into a quote you're learning. Gaps get wider as the card gets more familiar.",
       foot:"8 quotes · from the Vault" },
+    { id:"paper", name:"Section I", icon:"📄", colour:"var(--info)", flagship:true, level:3,
+      desc:"Four short answers, one clock for all of them, and nothing marked until you submit. The exam shape, not the practice shape.",
+      foot:"16 marks · 16 min · needs http" },
     { id:"sayit", name:"Say It In One", icon:"💬", colour:"var(--good)", flagship:true, level:2,
       desc:"State a technique's effect in one sentence, in your own words. Marked by the embedding model.",
       foot:"5 prompts · needs http" },
@@ -233,6 +236,8 @@ EN.Screens.play = (function () {
         return G.bandgrid.start(view, { rows: 8 });
       case "deconstruct":
         return G.deconstruct.start(view, { count: 8 });
+      case "paper":
+        return G.paper.start(view, { count: 4, timed: args[1] !== "untimed" });
       case "sayit":
         return G.layerc.start(view, { modeId: "sayit", title: "💬 Say It In One", mode: "sayit", count: 5 });
       case "thesis":

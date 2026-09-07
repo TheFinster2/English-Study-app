@@ -360,6 +360,28 @@ EN.State = (function () {
     return isBest;
   }
 
+  /**
+   * Record a SKILL only.
+   *
+   * Typed answers have never gone through recordAnswer, and should not start: that function
+   * also moves stats.answered, module mastery and text mastery, and a four-mark rubric is
+   * not the same event as a right-or-wrong multiple choice. But the skill breakdown was
+   * silent about every typed mode in the app, which is most of what a student's marks
+   * actually rest on. So this touches `topics` and nothing else.
+   *
+   * `ok` for a marked sentence means three of the four criteria or better — the same line
+   * the rubric already draws between "circling it" and "nailed it" is too strict for a
+   * percentage, and two out of four is not a skill demonstrated.
+   */
+  function recordSkill(topic, ok) {
+    if (!topic) return;
+    const k = data.topics || (data.topics = {});
+    const rec = k[topic] || (k[topic] = { seen: 0, correct: 0 });
+    rec.seen++;
+    if (ok) rec.correct++;
+    save();
+  }
+
   /* ── mastery ─────────────────────────────────────────────── */
   /* Confidence-weighted: a perfect three-question run should not read as mastered. */
   function weighted(rec) {
@@ -725,7 +747,7 @@ EN.State = (function () {
     difficulty, xpMultiplier, canPrestige, doPrestige, masteryTier,
     weekly, weeklyQuests, claimQuest, weekKey, QUEST_POOL,
     touchStreak, streakBonus,
-    recordAnswer, noteStreak, bump, markMode, recordScore,
+    recordAnswer, recordSkill, noteStreak, bump, markMode, recordScore,
     mastery, textMastery, topicMastery, overallAccuracy,
     usePowerup, grantPowerup, ownsTheme, ownsAvatar,
     cardState, reviewCard, dueCards, cardXpEligible, markCardXp,

@@ -81,14 +81,30 @@ module.exports = {
       t.eq(speakers.leaked, 0, "and no citation ends with the word “speaker”");
 
       /* ── it is visible on screen, in every place a quote appears ── */
+      /* Only about half the Layer C prompts carry a quote, and the mode draws at random,
+         so asking "does /game/sayit show a citation" passed or failed on the draw. The
+         run is seeded with prompts that DO have quotes instead — the question is whether
+         a quote on screen is attributed, not whether one turned up. */
       const PLACES = [
-        ["/reference/texts/donne", ".bq"],
-        ["/reference/texts/1984", ".bq"],
-        ["/game/technique", ".bq"],
-        ["/game/sayit", ".bq"]
+        ["/reference/texts/donne", ".bq", null],
+        ["/reference/texts/1984", ".bq", null],
+        ["/game/technique", ".bq", null],
+        ["/game/sayit", ".bq", "sayit"]
       ];
-      for (const [route, sel] of PLACES) {
+      for (const [route, sel, seed] of PLACES) {
         await h.goto(page, route, 1500);
+        if (seed === "sayit") {
+          await page.evaluate(() => {
+            const withQuote = EN.Bank.freeText()
+              .filter(p => p.mode === "sayit" && p.quote).slice(0, 3);
+            const v = document.querySelector("#view");
+            v.innerHTML = "";
+            EN.Games.layerc.start(v, { modeId: "sayit", title: "💬 Say It In One",
+                                       mode: "sayit", count: withQuote.length,
+                                       prompts: withQuote });
+          });
+          await page.waitForTimeout(900);
+        }
         const seen = await page.evaluate(s => {
           const first = document.querySelector("#view " + s);
           if (!first) return null;
@@ -145,16 +161,23 @@ module.exports = {
           /* A card whose whole face is a bare voice note would be a nonsense answer. */
           generic: Array.from(document.querySelectorAll("#view .mface-front"))
             .map(f => f.textContent.trim()).filter(x => EN.U.genericSpeaker(x)).length,
-          /* And a citation under a quote must not print the speaker in this round. */
-          leaks: Array.from(document.querySelectorAll("#view .mface-front .tiny"))
-            .filter(n => / — /.test(n.textContent)).length,
+          /* Precisely: no card's own citation may contain its own answer, checked
+             against the REAL pairing rather than by guessing which card matches which.
+             Counting " — " instead was a false positive — two authored loci contain an em
+             dash of their own — and checking the whole quote pool was also wrong, because
+             the round already refuses the quotes whose speaker is their own composer. */
+          leaks: EN.Games.quotematch.buildPairs("quote-character", 8, null)
+            .filter(pr => pr.a.title && pr.b.text &&
+                          pr.a.title.indexOf(pr.b.text) >= 0).length,
+          builtPairs: EN.Games.quotematch.buildPairs("quote-character", 8, null).length,
           cites: document.querySelectorAll("#view .mface-front .tiny").length
         };
       });
       t.eq(round.kind, "Quote → speaker", "the quote→speaker round can be asked for by name");
       t.atLeast(round.cites, 3, "  and its quote cards carry a citation");
       t.eq(round.generic, 0, "  never offering a bare voice note as an answer");
-      t.eq(round.leaks, 0, "  and never printing the speaker in the citation");
+      t.atLeast(round.builtPairs, 4, "  the round can be built from the bank");
+      t.eq(round.leaks, 0, "  and no card's citation contains its own answer");
 
       t.eq(page.errors.slice(0, 3), [], "console and page errors");
       await page.close();

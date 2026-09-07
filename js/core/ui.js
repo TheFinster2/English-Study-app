@@ -218,6 +218,85 @@ EN.UI = (function () {
     } else fallback();
   }
 
+  /**
+   * The Layer C availability banner, and the state machine behind it.
+   *
+   * Extracted because a second mode needed it. It warms the model in the background while
+   * the student reads, reports honestly when it cannot be had, and offers the download in a
+   * MODAL rather than by navigating to Settings — going to Settings threw the run away, and
+   * a student part-way through a paper came back to a fresh one, which reads exactly like
+   * being kicked out of the app.
+   *
+   * Returns { node, state() } where state() is one of loading | ready | notDownloaded |
+   * failed | blocked. `onChange` fires whenever it moves.
+   */
+  function markerBanner(onChange) {
+    const node = U.el("div", { class: "grid" });
+    let state = EN.Mark.available() ? "loading" : "blocked";
+
+    function set(next) {
+      state = next;
+      paint();
+      if (onChange) onChange(state);
+    }
+
+    function warm() {
+      if (!EN.Mark.available()) return;
+      EN.Mark.isDownloaded().then(has => {
+        if (!has) return set("notDownloaded");
+        EN.Mark.load().then(ok => set(ok ? "ready" : "failed"));
+      });
+    }
+
+    function paint() {
+      node.innerHTML = "";
+      if (state === "ready") return;
+      if (state === "loading") {
+        node.appendChild(U.el("div", { class: "lc-verdict unavailable" }, [
+          U.el("div", { class: "tiny", text: "Warming up the sentence marker…" })
+        ]));
+        return;
+      }
+      const why = state === "blocked" ? EN.Mark.blockedReason() : state;
+      const msg = why === "file"
+        ? "Sentence marking needs the app served over http — it works on your phone install and on the published site, just not by double-clicking the file. You can still write and compare against the model answers."
+        : state === "notDownloaded"
+          ? "Sentence marking is switched off. Enable it in Settings — 23 MB, one time, then it works offline forever."
+          : "Sentence marking is unavailable on this device. You can still write and compare against the model answers.";
+      node.appendChild(U.el("div", { class: "lc-verdict unavailable" }, [
+        U.el("div", { class: "lc-word", text: "Marking unavailable" }),
+        U.el("p", { class: "tiny", text: msg }),
+        state === "notDownloaded"
+          ? U.el("button", { class: "btn btn-sm btn-primary", text: "⬇ Turn on sentence marking",
+              on: { click: () => {
+                modal(U.el("div", {}, [
+                  U.el("h2", { text: "Sentence marking" }),
+                  U.el("p", { class: "tiny muted",
+                    text: "Download it here and this run carries on — nothing you have already answered is lost." }),
+                  EN.Screens.misc.layerCPanel(),
+                  U.el("button", { class: "btn btn-ghost btn-block", style: "margin-top:12px",
+                    text: "Back to the run", on: { click: () => {
+                      closeModal();
+                      /* Re-check on the way out, so a download that finished inside the
+                         modal takes effect for the rest of THIS run. */
+                      if (!EN.Mark.available()) return;
+                      EN.Mark.isDownloaded().then(has => {
+                        if (!has) return;
+                        set("loading");
+                        EN.Mark.load().then(ok => set(ok ? "ready" : "failed"));
+                      });
+                    } } })
+                ]));
+              } } })
+          : null
+      ]));
+    }
+
+    paint();
+    warm();
+    return { node, state: () => state };
+  }
+
   /* ── glossary in the feedback panel ───────────────────────────
      Two in every five questions explain themselves using a technical term — "chiasmus
      reverses the terms across the pivot", "the register drops" — and a student who does
@@ -666,6 +745,6 @@ EN.UI = (function () {
   return { route, go, init, handleRoute, syncHeader, applyTheme, toast, modal, closeModal,
            confirmDialog, award, gameShell, results, rank, chip, onLeave, pulse,
            crutch, crutchCost, readTimeFor, rushFloor, rushHint, timeBudget, announce,
-           glossary, techniquesIn, copy,
+           glossary, techniquesIn, copy, markerBanner,
            MIN_BONUS_ACCURACY, READ_BASE_MS, READ_PER_WORD_MS, READ_CAP_MS };
 })();

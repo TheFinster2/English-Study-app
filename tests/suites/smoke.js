@@ -62,7 +62,7 @@ module.exports = {
          primary action is on screen AND clear of the nav. */
       for (const width of [390, 360]) {
         const page = await h.open("/home", { width });
-        const MODES = ["cloze", "marking", "essay", "sayit", "thesis", "rewrite", "bandgrid"];
+        const MODES = ["cloze", "marking", "essay", "sayit", "thesis", "rewrite", "bandgrid", "paper"];
         for (const mode of MODES) {
           await h.goto(page, "/game/" + mode, 620);
           /* SETUP uses in-page DOM clicks rather than Playwright's, deliberately.

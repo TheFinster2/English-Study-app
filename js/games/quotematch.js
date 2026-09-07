@@ -37,9 +37,20 @@ EN.Games.quotematch = (function () {
            the answers to "who says this". */
         if (!q.speaker || used.has(q.speaker) ||
             U.genericSpeaker(q.speaker) || /narrator|stage direction/i.test(q.speaker)) continue;
+        /* And not where the speaker IS the composer or is named in the work — "Donne"
+           against a composer of "John Donne", "George Orwell" against an essay of his.
+           Those make the question trivial and print the answer in the attribution, which
+           are the same fault seen from two directions. */
+        const cit = U.cite(q);
+        const said = U.normalise(q.speaker);
+        if (said && (U.normalise(cit.composer).indexOf(said) >= 0 ||
+                     U.normalise(cit.work).indexOf(said) >= 0)) continue;
         used.add(q.speaker);
-        /* Without the speaker: this round IS "who says this". */
-        out.push({ a: { text: shorten(q.text), title: U.citeLine(q, { speaker: false }) },
+        /* Work and composer only. This round IS "who says this", and the locus is not
+           needed to attribute a line — while some authored loci name the voice inside
+           themselves, so leaving it in printed the answer on the card. */
+        out.push({ a: { text: shorten(q.text),
+                        title: U.citeLine(q, { speaker: false, locus: false }) },
                    b: { text: q.speaker }, key: q.id });
         if (out.length >= n) break;
       }
