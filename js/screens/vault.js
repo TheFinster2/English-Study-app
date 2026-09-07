@@ -40,6 +40,41 @@ EN.Screens.vault = (function () {
     view.lastChild.children[0].addEventListener("click", () => UI.go("/game/cloze"));
     view.lastChild.children[1].addEventListener("click", () => browse(view));
 
+    /* ── the ones that keep beating you ──────────────────────────
+       A Leitner box resets to 1 on every miss, so a card you keep failing comes back
+       tomorrow and the day after and forever, indistinguishable in the list from the forty
+       that are working. `lapses` was already counted and nothing read it. */
+    const stuck = S.leeches();
+    if (stuck.length) {
+      view.appendChild(U.el("div", { class: "card notice-bad", style: "margin-bottom:14px" }, [
+        U.el("div", { class: "row" }, [
+          U.el("span", { style: "font-size:22px", text: "🩹" }),
+          U.el("div", { style: "flex:1; min-width:0" }, [
+            U.el("b", { text: stuck.length + " quote" + (stuck.length === 1 ? "" : "s") +
+                              " keep beating you" }),
+            U.el("div", { class: "tiny muted", style: "margin-top:4px; line-height:1.6",
+              text: "Missed " + S.LEECH_LAPSES + " times or more. Re-reading one is worth " +
+                    "more than another attempt at recalling it, so Cloze Crunch shows these " +
+                    "in full first and asks for fewer words." })
+          ])
+        ]),
+        U.el("div", { class: "grid", style: "margin-top:10px" },
+          stuck.slice(0, 3).map(x => U.el("div", { class: "lc-ex" }, [
+            U.el("div", { style: "font-style:italic", text: U.cite(x.q).work + " — " +
+              (x.q.text.length > 70 ? x.q.text.slice(0, 67) + "…" : x.q.text) }),
+            U.el("div", { class: "tiny muted", style: "margin-top:4px",
+              text: "missed ×" + x.c.lapses })
+          ]))),
+        U.el("button", { class: "btn btn-primary btn-block", style: "margin-top:12px",
+          text: "🩹 Relearn " + (stuck.length === 1 ? "it" : "them") + " →",
+          on: { click: () => {
+            view.innerHTML = "";
+            EN.Games.cloze.start(view, { count: Math.min(8, stuck.length),
+                                         quotes: stuck.map(x => x.q) });
+          } } })
+      ]));
+    }
+
     /* Filters. Text and concept, plus a due-only toggle. */
     view.appendChild(U.el("h2", { text: "Browse the Vault" }));
 
@@ -123,8 +158,11 @@ EN.Screens.vault = (function () {
       const bx = st ? st.box : 0;
       const isDue = !st || U.daysBetween(st.due, U.dayKey()) >= 0;
       const row = U.el("button", { class: "vault-row", type: "button" }, [
-        U.el("span", { class: "vault-box" + (isDue ? " vault-due" : ""), data: { box: String(bx) },
-                       text: bx ? String(bx) : "·" }),
+        U.el("span", { class: "vault-box" + (isDue ? " vault-due" : "") +
+                              (S.isLeech(q.id) ? " vault-leech" : ""),
+                       data: { box: String(bx) },
+                       title: S.isLeech(q.id) ? "Missed " + st.lapses + " times" : "",
+                       text: S.isLeech(q.id) ? "🩹" : (bx ? String(bx) : "·") }),
         U.el("span", { class: "vault-row-q", html: U.highlight(q.text, q.span) }),
         /* The work as well as the locus: a row reading only "Part 2, Ch. 7" does not say
            which book, and the Vault mixes every text the student studies. */

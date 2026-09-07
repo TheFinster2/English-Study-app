@@ -155,7 +155,9 @@ line in this app that matters most.
   same Layer C rubric, out of sixteen, with the criteria behind every mark
 - **5 module bosses** plus **The Final Paper**, each with a gimmick that attacks a
   different habit — an editor who rewrites your answer, a critic who hides the labels
-- **The Quote Vault** — 324 quotes on a five-box Leitner schedule
+- **The Quote Vault** — 324 quotes on a five-box Leitner schedule, with the ones that keep
+  beating you named rather than left to cycle: four misses and the app shows the line in
+  full before asking for it again
 - **Reference screens** — 229 techniques, 12 rubric verbs, the band descriptors, module
   concepts, essay architecture, per-text quote sheets
 - **The Draft Desk** — somewhere to write, with a word count, an exam clock and export to
@@ -251,6 +253,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `cite` | browser | every quote on screen says which work, composer and locus it came from |
 | `skills` | browser | answers are tracked by skill, and every skill leads somewhere that trains it |
 | `paper` | browser | a section runs on one clock, marks nothing until submitted, and pays what it shows |
+| `leech` | browser | a quote missed four times is named, and drilled differently |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -283,6 +286,14 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `leech` — a Leitner box resets to 1 on every miss, so a quote you keep failing comes back
+  tomorrow and forever, indistinguishable from the forty that are working. `lapses` had been
+  counted since the Vault was written and nothing read it. The fix is not suspension —
+  hiding a quote a student needs is the wrong answer — so they are named, and the
+  *intervention* changes: Cloze Crunch shows a leech in full before asking for it and asks
+  for fewer words. That second half is the load-bearing one, and the suite asserts it,
+  because the box reset means a leech would otherwise arrive at exactly the difficulty that
+  has already failed four times running.
 - `paper` — holds the three constraints that *are* the mode (one clock, free navigation with
   answers preserved, no marking until submit) plus the two things that were wrong when it was
   written. `UI.results` **displays** a payout and `UI.award` **grants** one; the first version

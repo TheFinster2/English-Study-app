@@ -49,7 +49,13 @@ EN.Games.cloze = (function () {
 
     const items = U.sample(pool, Math.min(c.count, pool.length)).map(q => {
       const box = S.cardState(q.id).box;
-      return { quote: q, box, cloze: U.cloze(q, { rate: rateFor(box), seed: box }) };
+      /* A leech gets the easiest gap rate the mode has, whatever box it is in. A card that
+         has beaten you four times is not a card to test harder — the Leitner reset already
+         sends it back to box 1 every time, so without this it arrives at the same
+         difficulty that has failed four times running and fails a fifth. */
+      const leech = S.isLeech(q.id);
+      const rate = leech ? rateFor(1) * 0.6 : rateFor(box);
+      return { quote: q, box, leech, cloze: U.cloze(q, { rate, seed: box }) };
     }).filter(it => it.cloze.blanks.length);
 
     if (!items.length) {
@@ -99,8 +105,20 @@ EN.Games.cloze = (function () {
         U.el("span", { class: "chip", text: it.quote.composer || "" }),
         U.el("span", { class: "chip", text: U.cite(it.quote).locus }),
         U.el("span", { class: "chip", text: "Box " + it.box }),
-        U.el("span", { class: "chip", text: it.cloze.blanks.length + " gap" + (it.cloze.blanks.length === 1 ? "" : "s") })
+        U.el("span", { class: "chip", text: it.cloze.blanks.length + " gap" + (it.cloze.blanks.length === 1 ? "" : "s") }),
+        it.leech ? U.el("span", { class: "chip bad", text: "🩹 relearn" }) : null
       ]));
+
+      /* For a leech, the whole line first. Drilling a quote you have never actually read
+         is what produced the four misses; reading it is the intervention, and hiding it
+         again would just be the fifth attempt at the thing that has not worked. */
+      if (it.leech) {
+        card.appendChild(U.el("details", { class: "notice", style: "margin-bottom:10px" }, [
+          U.el("summary", { class: "tiny", style: "cursor:pointer",
+            text: "This one keeps beating you — read it first" }),
+          U.el("div", { style: "margin-top:8px" }, [U.quoteBlock(it.quote)])
+        ]));
+      }
 
       /* Render the display string, replacing each ␣{n} marker with an input. The marker
          form comes from U.cloze so the generator stays independent of the UI. */

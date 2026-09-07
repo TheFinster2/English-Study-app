@@ -442,6 +442,29 @@ EN.State = (function () {
     return c;
   }
 
+  /* ── leeches ──────────────────────────────────────────────────
+     A Leitner box resets to 1 on every failure, which means a card you keep missing comes
+     back tomorrow, and the day after, forever. `lapses` was already counted and nothing
+     read it, so the one card actively wasting a student's time was indistinguishable from
+     the forty that are working.
+
+     Four is the threshold Anki uses and it is a reasonable place to stop: three misses is
+     a hard quote, four is a quote you are not learning the way you are currently trying to
+     learn it. The app does not suspend them — hiding a quote a student needs would be the
+     wrong answer — it names them and says to read the thing before drilling it again. */
+  const LEECH_LAPSES = 4;
+
+  function leeches() {
+    return EN.Bank.quotes()
+      .map(q => ({ q, c: data.srs[q.id] }))
+      .filter(x => x.c && x.c.lapses >= LEECH_LAPSES)
+      .sort((a, b) => b.c.lapses - a.c.lapses);
+  }
+  const isLeech = id => {
+    const c = data.srs[id];
+    return !!(c && c.lapses >= LEECH_LAPSES);
+  };
+
   function dueCards() {
     const today = U.dayKey();
     return EN.Bank.quotes().filter(q => {
@@ -751,6 +774,7 @@ EN.State = (function () {
     mastery, textMastery, topicMastery, overallAccuracy,
     usePowerup, grantPowerup, ownsTheme, ownsAvatar,
     cardState, reviewCard, dueCards, cardXpEligible, markCardXp,
+    leeches, isLeech, LEECH_LAPSES,
     freeTextEligible, markFreeText, freeTextDay,
     checkAchievements, achievementStats,
     daily, dailySpec, progressDaily, claimDaily,

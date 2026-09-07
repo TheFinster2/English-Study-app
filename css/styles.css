@@ -1218,3 +1218,8 @@ h2.ea-pool-head.spent{ display:none; }
    at 360px, so the labels are short and Next takes the slack. */
 .paper-actions{ display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; }
 .paper-actions .btn{ min-height:44px; }
+
+/* A card that keeps being missed. Marked in the list rather than hidden: a quote a student
+   needs is not one to suspend, it is one to go and read. */
+.vault-box.vault-leech{ color:var(--bad); border:1px solid color-mix(in srgb,var(--bad) 45%,transparent); }
+.chip.bad{ color:var(--bad); border-color:color-mix(in srgb,var(--bad) 45%,transparent); }
