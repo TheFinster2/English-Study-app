@@ -210,7 +210,7 @@ EN.Games.technique = (function () {
           if (i === it.answerIndex) b.classList.add("correct");
           else if (i === chosen) b.classList.add("wrong");
         });
-        S.recordAnswer(it.quote.mod, ok, null, it.quote.textId);
+        S.recordAnswer(it.quote.mod, ok, null, it.quote.textId, "Techniques");
         const tooFast = performance.now() - shownAt < minRead;
 
         if (ok) {

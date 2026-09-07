@@ -313,7 +313,7 @@ EN.Games.boss = (function () {
         qs.forEach((q, i) => {
           answered++;
           if (results[i]) right++;
-          S.recordAnswer(q.mod, !!results[i], q.id, q.text);
+          S.recordAnswer(q.mod, !!results[i], q.id, q.text, q.topic);
           if (results[i] && !isRewrite && answeredRight.length < 12) answeredRight.push(q);
         });
         if (isRewrite) rewritten = null;

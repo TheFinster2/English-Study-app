@@ -23,7 +23,7 @@
         #/vault offline gets the browser's dinosaur.
    ============================================================================ */
 
-const CACHE = "closereading-v1.2.0";
+const CACHE = "closereading-v1.3.0";
 const MODEL_CACHE = "closereading-model-v1";   // owned by mark.js — do not delete
 
 /* Every file the app loads, in the order index.html loads them. Kept in sync by hand and

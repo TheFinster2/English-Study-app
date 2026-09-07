@@ -261,7 +261,7 @@ EN.Games.quiz = (function () {
 
     function answer(q, chosen, isCorrect, btn) {
       const fb = card.reveal(chosen);
-      S.recordAnswer(q.mod, isCorrect, q.id, q.text);
+      S.recordAnswer(q.mod, isCorrect, q.id, q.text, q.topic);
       if (q.topic === "Techniques" && isCorrect) S.bump("techniquesNamed");
 
       // Answering faster than this question could be read earns nothing.

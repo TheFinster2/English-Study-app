@@ -255,6 +255,39 @@ EN.Bank = (function () {
     });
   }
 
+  /* The skill axis. Bank topics plus the ones the non-MCQ modes contribute, because a
+     breakdown that covered only multiple choice would say nothing about the Marking Desk
+     or the Essay Architect — which is where a student's marks actually come from. */
+  /* These three come from modes rather than from multiple choice, so there is no MCQ pool
+     to drill: aiming /game/drill at one would filter to nothing, fall back to the whole
+     bank, and run under a title claiming to be about bands. Each points at the mode that
+     actually trains it instead. */
+  const EXTRA_TOPICS = ["Bands", "Essay structure", "Question analysis"];
+  const TOPIC_MODE = { "Bands": "/game/bandgrid",
+                       "Essay structure": "/game/essay",
+                       "Question analysis": "/game/deconstruct" };
+
+  /** Where "practise this skill" should send a student. */
+  const topicRoute = name =>
+    TOPIC_MODE[name] || ("/game/drill/" + topicSlug(name));
+  const topicSlug = t => "topic-" + String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  function topicFromSlug(slug) {
+    return allTopics().find(t => topicSlug(t) === slug) || null;
+  }
+  const allTopics = () => TOPICS.concat(EXTRA_TOPICS);
+
+  function statsByTopic() {
+    const st = EN.State.data;
+    return allTopics().map(name => {
+      const rec = (st.topics || {})[name] || { seen: 0, correct: 0 };
+      return { name, slug: topicSlug(name), route: topicRoute(name),
+               seen: rec.seen, correct: rec.correct,
+               inBank: all().filter(q => q.topic === name).length,
+               mastery: EN.State.topicMastery(name),
+               accuracy: U.pct(rec.correct, rec.seen) };
+    }).filter(t => t.inBank > 0 || t.seen > 0);
+  }
+
   function statsByText() {
     const st = EN.State.data;
     return activeTexts().map(t => {
@@ -273,8 +306,9 @@ EN.Bank = (function () {
            activeTexts, activeTextIds, allTexts, text, slotOf,
            quotes, allQuotes, quoteById, filterQuotes,
            techniques, technique, techniqueName, techniqueAlts,
+           TOPICS, allTopics, topicSlug, topicFromSlug, topicRoute, statsByTopic,
            paragraphs, activeParagraphs, paragraphById,
            freeText, activeFreeText, puzzles, topicPairs,
            filter, draw, shuffleChoices, mistakeQuestions,
-           statsByModule, statsByText, TOPICS };
+           statsByModule, statsByText };
 })();

@@ -23,7 +23,7 @@ window.EN = window.EN || {};
 
 /** Bumped with every deploy. sw.js keeps its own version — they need not match, but a
     release should move both, and tests/update.js checks the sw.js constant changed. */
-EN.BUILD = "1.2.0";
+EN.BUILD = "1.3.0";
 
 (function () {
   const U = EN.U, S = EN.State, UI = EN.UI;

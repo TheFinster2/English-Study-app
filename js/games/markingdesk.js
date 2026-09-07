@@ -230,7 +230,7 @@ EN.Games.marking = (function () {
         else EN.Sound.bandMiss();
         if (distance === 0 && wrong === 0) { perfect++; S.bump("perfectMarkings"); }
         S.bump("paragraphsMarked");
-        S.recordAnswer(p.module, distance === 0, null, p.text);
+        S.recordAnswer(p.module, distance === 0, null, p.text, "Bands");
         S.progressDaily("marking", 1);
 
         const gain = tooFast ? 0 : Math.round(30 * (0.55 * bandCredit + 0.45 * descShare));

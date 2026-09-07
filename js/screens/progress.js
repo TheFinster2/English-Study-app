@@ -15,6 +15,65 @@ EN.Screens.progress = function (view) {
     tile(Object.keys(d.achievements).length + "/" + EN.DATA.achievements.length, "Achievements")
   ]));
 
+  /* ── the diagnosis ────────────────────────────────────────────
+     The screen was a wall of true numbers that added up to no instruction. Mastery per
+     module tells a student which book to reread; mastery per SKILL tells them what kind of
+     thinking to practise, and it is the same answer whichever text they are sitting. So the
+     weakest skill with enough evidence behind it gets stated in a sentence, with the number
+     it came from and a drill aimed at it.
+
+     Ten answers before a skill can be called weak. Below that the figure is noise, and a
+     diagnosis built on noise is worse than none — the student believes it. */
+  const EVIDENCE = 10;
+  const skills = EN.Bank.statsByTopic();
+  const judged = skills.filter(t => t.seen >= EVIDENCE).sort((a, b) => a.accuracy - b.accuracy);
+  if (judged.length >= 2) {
+    const weak = judged[0], strong = judged[judged.length - 1];
+    view.appendChild(U.el("h2", { text: "Where the marks are going" }));
+    view.appendChild(U.el("div", { class: "card next-up" }, [
+      U.el("div", { class: "row" }, [
+        U.el("span", { class: "next-ico", text: "🩺" }),
+        U.el("div", { style: "flex:1; min-width:0" }, [
+          U.el("b", { style: "font-size:15px",
+            text: weak.name + " is your weakest skill" }),
+          U.el("div", { class: "tiny muted", style: "margin-top:6px; line-height:1.6",
+            text: weak.correct + "/" + weak.seen + " correct (" + weak.accuracy + "%), against " +
+                  strong.accuracy + "% on " + strong.name + ". A skill is the same skill in " +
+                  "every text you study, so this is worth more than any single book." })
+        ])
+      ]),
+      U.el("button", { class: "btn btn-primary btn-block", style: "margin-top:12px",
+        text: "Drill " + weak.name + " →",
+        on: { click: () => UI.go(weak.route) } })
+    ]));
+  }
+
+  /* ── by skill ── */
+  view.appendChild(U.el("h2", { text: "By skill" }));
+  view.appendChild(U.el("p", { class: "tiny muted",
+    text: "What kind of question it was, not which text it came from. Grey means you have " +
+          "not answered enough of them yet to say anything." }));
+  const sk = U.el("div", { class: "card" });
+  skills.slice().sort((a, b) => b.seen - a.seen).forEach(t => {
+    const thin = t.seen < EVIDENCE;
+    const tier = S.masteryTier(t.mastery);
+    const row = U.el("button", { class: "mastery-item mastery-pick", type: "button" }, [
+      U.el("div", { class: "mastery-badge", text: thin ? "·" : tier.icon }),
+      U.el("div", { class: "mastery-body" }, [
+        U.el("div", { class: "mastery-name", text: t.name }),
+        U.el("div", { class: "bar", "aria-hidden": "true" },
+          [U.el("i", { style: "width:" + (thin ? 0 : t.mastery) + "%" })]),
+        U.el("div", { class: "tiny muted", style: "margin-top:4px",
+          text: thin ? (t.seen ? t.seen + " answered — too few to judge" : "not attempted yet")
+                     : t.correct + "/" + t.seen + " correct · " + t.accuracy + "% raw · " + tier.name })
+      ]),
+      U.el("div", { class: "mastery-pct", text: thin ? "—" : t.mastery + "%" })
+    ]);
+    row.addEventListener("click", () => UI.go(t.route));
+    sk.appendChild(row);
+  });
+  view.appendChild(sk);
+
   /* Per-module AND per-text mastery, because a student can be strong on the Common
      Module and lost in Module B, and the adaptive draw weights both. */
   view.appendChild(U.el("h2", { text: "By module" }));

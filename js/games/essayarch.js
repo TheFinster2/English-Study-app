@@ -226,7 +226,7 @@ EN.Games.essay = (function () {
         } else {
           EN.Sound.wrong();
         }
-        S.recordAnswer(p.mod, allRight, null, p.text);
+        S.recordAnswer(p.mod, allRight, null, p.text, "Essay structure");
 
         stage.appendChild(U.el("div", { class: "feedback " + (allRight ? "ok" : "no"), style: "margin-top:14px" }, [
           U.el("div", {}, [

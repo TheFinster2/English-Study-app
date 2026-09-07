@@ -28,6 +28,10 @@ EN.State = (function () {
     modules: {},          // { common: {seen, correct} … }
     texts: {},            // { "1984": {seen, correct} … } — a student can be strong on
                           // the Common Module and lost in Module B, so both are tracked
+    /* { "Techniques": {seen, correct} … } — the SKILL axis, which is the one a student
+       can act on. "Module B 61%" tells you which book to reread; "Form and structure 38%"
+       tells you what kind of thinking to practise, and it cuts across every text. */
+    topics: {},
     modesPlayed: {},
     puzzlesSolved: {},
     bossesBeaten: {},
@@ -299,7 +303,7 @@ EN.State = (function () {
 
   /* ── answer recording ────────────────────────────────────── */
   /** Records against the module and the text, so the adaptive draw can weight both. */
-  function recordAnswer(mod, isCorrect, questionId, text) {
+  function recordAnswer(mod, isCorrect, questionId, text, topic) {
     data.stats.answered++;
     if (isCorrect) data.stats.correct++;
 
@@ -312,6 +316,12 @@ EN.State = (function () {
       const t = data.texts[text] || (data.texts[text] = { seen: 0, correct: 0 });
       t.seen++;
       if (isCorrect) t.correct++;
+    }
+    if (topic) {
+      const k = data.topics || (data.topics = {});
+      const rec = k[topic] || (k[topic] = { seen: 0, correct: 0 });
+      rec.seen++;
+      if (isCorrect) rec.correct++;
     }
 
     if (questionId) {
@@ -358,6 +368,7 @@ EN.State = (function () {
   }
   const mastery     = mod  => weighted(data.modules[mod]);
   const textMastery = text => weighted(data.texts[text]);
+  const topicMastery = topic => weighted((data.topics || {})[topic]);
   const overallAccuracy = () => U.pct(data.stats.correct, data.stats.answered);
 
   /* ── inventory ───────────────────────────────────────────── */
@@ -715,7 +726,7 @@ EN.State = (function () {
     weekly, weeklyQuests, claimQuest, weekKey, QUEST_POOL,
     touchStreak, streakBonus,
     recordAnswer, noteStreak, bump, markMode, recordScore,
-    mastery, textMastery, overallAccuracy,
+    mastery, textMastery, topicMastery, overallAccuracy,
     usePowerup, grantPowerup, ownsTheme, ownsAvatar,
     cardState, reviewCard, dueCards, cardXpEligible, markCardXp,
     freeTextEligible, markFreeText, freeTextDay,

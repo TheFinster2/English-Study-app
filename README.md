@@ -244,6 +244,7 @@ not having any. A suite is a file in `tests/suites/` exporting `{ name, run(t) }
 | `motion` | browser | a device asking for less motion is honoured, and can be overridden |
 | `runner` | browser | Margin Runner's jump, its obstacles and its rewards agree with each other |
 | `cite` | browser | every quote on screen says which work, composer and locus it came from |
+| `skills` | browser | answers are tracked by skill, and every skill leads somewhere that trains it |
 
 The browser suites need Playwright (`npm i -D playwright`) and are **skipped**, not failed,
 without it — the data suites are the ones that must run anywhere.
@@ -276,6 +277,13 @@ Every assertion in here exists because something was actually wrong:
   thousands of points and no XP, level, Marks, achievement or statistic has moved. It also
   guards the mechanics — 64 tiles after every cascade, no two tiles sharing a square, and
   never a dead board.
+- `skills` — mastery per module and per text are both true and neither is instruction:
+  "Module B 61%" tells you which book to reread and nothing you can do tonight. Answers now
+  carry their topic, and the suite holds the two things that make the axis honest — a skill
+  with no MCQ pool (Bands, Essay structure, Question analysis) must not open a "drill" that
+  filters to nothing, falls back to the whole bank and runs under a title claiming to be
+  about bands; and ten answers is the floor before a skill is called weak, because a
+  diagnosis built on four is a horoscope the student will follow.
 - `cite` — quotes used to be captioned "speaker · locus" and nothing else, so a line could
   appear in a game reading "Part 2, Ch. 7 — Winston" with no indication of which book. Every
   quote already had a locus, a speaker and a composer; the gap was entirely in the rendering.

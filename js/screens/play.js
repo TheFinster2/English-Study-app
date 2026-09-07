@@ -190,9 +190,15 @@ EN.Screens.play = (function () {
                                     totalTime: 120, count: 24, dailyMode: "rapid" });
       case "drill":
         if (args[1]) {
+          /* A drill can be aimed at a module, a text, or a SKILL — "Form and structure"
+             cuts across every text, and it is the axis a student can act on. Topics carry
+             spaces, so they travel as a slug; the hash router splits on "/". */
+          const topic = EN.Bank.topicFromSlug(args[1]);
           const sel = args[1] === "all" ? {} :
+                      topic ? { topic } :
                       EN.DATA.modules.some(m => m.id === args[1]) ? { mods: [args[1]] } : { texts: [args[1]] };
-          return G.quiz.start(view, Object.assign({ modeId: "drill", title: "🎯 Module Drill", count: 15 }, sel));
+          const title = topic ? "🎯 " + topic : "🎯 Module Drill";
+          return G.quiz.start(view, Object.assign({ modeId: "drill", title, count: 15 }, sel));
         }
         return pickModule(view, "🎯 Module Drill", sel =>
           UI.go("/game/drill/" + (sel.mods ? sel.mods[0] : sel.texts ? sel.texts[0] : "all")));

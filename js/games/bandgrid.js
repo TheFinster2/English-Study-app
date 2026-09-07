@@ -155,7 +155,7 @@ EN.Games.bandgrid = (function () {
       else EN.Sound.gridClear();
       S.bump("gridsCleared");
       S.progressDaily("bandgrid", 1);
-      rows.forEach((r, ri) => S.recordAnswer(null, picks[ri] === r.band, null, null));
+      rows.forEach((r, ri) => S.recordAnswer(null, picks[ri] === r.band, null, null, "Bands"));
 
       // No time bonus below 65% — a fast wrong grid must not outscore a slow right one.
       const timeBonus = accuracy >= 0.65 ? Math.max(0, Math.round(timeLeft * 1.2)) : 0;

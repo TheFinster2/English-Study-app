@@ -164,7 +164,7 @@ EN.Games.deconstruct = (function () {
           else if (i === chosen) b.classList.add("wrong");
         });
         const tooFast = performance.now() - shownAt < minRead;
-        S.recordAnswer(null, ok, null, null);
+        S.recordAnswer(null, ok, null, null, "Question analysis");
         S.bump("deconstructions");
 
         if (ok) {

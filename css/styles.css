@@ -1206,3 +1206,8 @@ h2.ea-pool-head.spent{ display:none; }
    the one message in the app the student must not scroll past. */
 .notice-bad{ border-left-color:var(--bad);
   background:color-mix(in srgb,var(--bad) 10%,transparent); }
+
+/* A mastery row that is also a drill button. */
+.mastery-pick{ width:100%; text-align:left; font:inherit; color:var(--ink); cursor:pointer;
+  background:none; border:0; padding:0; }
+.mastery-pick:hover .mastery-name{ color:var(--accent); }
