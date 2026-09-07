@@ -22,7 +22,8 @@
 window.EN = window.EN || {};
 
 /** Bumped with every deploy. sw.js keeps its own version — they need not match, but a
-    release should move both, and tests/update.js checks the sw.js constant changed. */
+    release should move both — tests/suites/offline.js fails the build if the shell's
+    contents change without the version moving. Re-stamp with `node tests/stamp.js`. */
 EN.BUILD = "1.4.0";
 
 (function () {

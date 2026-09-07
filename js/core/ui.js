@@ -22,8 +22,8 @@ EN.UI = (function () {
      ~800 ms of orientation plus 240 ms per word ≈ 250 wpm, which is brisk but real for
      a student who already knows the text. Capped, because nobody is made to stare at a
      paragraph for a minute before the app will believe them. Tuned against
-     tests/honest.js, which is the only way to know the floor hasn't started punishing
-     normal play. */
+     tests/suites/economy.js, which asserts the floor is both real AND reachable — the
+     only way to know it has not started punishing normal play. */
   const READ_BASE_MS = 800;
   const READ_PER_WORD_MS = 240;
   const READ_CAP_MS = 25000;
@@ -546,7 +546,7 @@ EN.UI = (function () {
     const gross = Math.max(0, o.xp || 0) + bonus;
     const xp = Math.round(gross * mult * (1 - crutchCost));
     /* Marks stay scarcer than XP: payouts run at 60% so the shop keeps costing
-       something. tests/economy.js prints the effort-per-purchase table. */
+       something. tests/suites/economy.js prints the effort-per-purchase table. */
     const coins = Math.round((o.coins || 0) * (o.raw ? 1 : 0.6) * (1 - crutchCost));
 
     if (coins) S.addCoins(coins, true);

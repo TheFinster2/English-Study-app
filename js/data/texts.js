@@ -6,7 +6,7 @@
 
    Swapping a text is done IN THE APP — Settings → Your texts. The four slots below are
    only the default for a fresh install; State.activeTexts() is what the app reads, and
-   it prefers the student's own selection. tests/validate.js asserts that every question
+   it prefers the student's own selection. tests/suites/validate.js asserts every question
    in the bank references a text that ships, which is the check that stops the app
    breaking when the swap happens.
 

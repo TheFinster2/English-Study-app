@@ -9,8 +9,24 @@
      • band is scored by DISTANCE — exact full, ±1 partial, ±2 or worse nothing
      • descriptors are scored NET: max(0, right − wrong) out of five
      • the completion bonus requires the descriptor ticks to agree, not just the band
-   Guessing Band 4 every time therefore collects the ±1 partial on some samples and
-   nothing else, which tests/exploit.js measures directly.
+   Measured rather than asserted, because the first version of this comment claimed that
+   guessing collects "the ±1 partial on some samples and nothing else", and that is not what
+   happens. Always answering Band 4 collects 38% of the band credit — the paragraphs are
+   evenly spread across bands 2–6, twelve each, so there is no modal band to farm, but a
+   middle guess is within one of most of them. Ticking the three commonest descriptors
+   collects 48%: three of the five are present in more than half the samples.
+
+   So a pure guesser scores about 43% and a marker who reads scores about 69%. Three
+   alternative rules were measured against both — a tighter ±1 credit, a double penalty on
+   wrong ticks, and all-or-nothing steps — and every one of them moved the two players by
+   the same amount, changing the gap by a single point. The gap is set by the base rates in
+   the data, not by the arithmetic on top of it, so the arithmetic was left alone.
+
+   43% for reading nothing is above the 25% a four-option guess gets, and that is inherent
+   to a five-band judgement with partial credit rather than a hole in it: the anti-rush floor
+   is what stops it being farmed quickly, and the feedback is what the mode is for.
+   tests/suites/bias.js holds the two numbers so a rebalance of the paragraph bank cannot
+   quietly open a gap that is not there now.
 
    The results screen is GATED behind a button (addendum H1). Opening a modal over the
    revealed judgement would cover the only place the marking is explained, which is the

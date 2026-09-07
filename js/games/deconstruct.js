@@ -5,7 +5,7 @@
    and the question wording is generated around them. Generating a question and then
    deciding what it asks produces questions with two defensible answers.
 
-   Difficulty contract (§9.10), asserted in tests/validate.js:
+   Difficulty contract (§9.10), asserted in tests/suites/validate.js:
      diff 1  — one rubric element in play (the verb), three distractor verbs
      diff 2  — verb + module concept
      diff 3  — verb + concept + the off-task trap

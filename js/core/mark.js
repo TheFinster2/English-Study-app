@@ -25,7 +25,7 @@
 
    No network request is ever made. The runtime and the weights are vendored into
    the repo; transformers.js is explicitly configured not to phone home, and
-   tests/offline.js fails the build if anything reaches outward.
+   tests/suites/offline.js fails the build if anything reaches outward.
    ============================================================================ */
 window.EN = window.EN || {};
 
@@ -238,7 +238,7 @@ EN.Mark = (function () {
         /* THE critical configuration. transformers.js defaults to fetching from the
            HuggingFace CDN, which would break the no-network promise in the most
            embarrassing way possible: silently, online only, and never in an offline
-           test. tests/offline.js asserts zero outbound requests after load. */
+           test. tests/suites/offline.js asserts zero outbound requests after load. */
         env.allowRemoteModels = false;
         env.allowLocalModels  = true;
         env.localModelPath    = rel("models/");
@@ -536,7 +536,7 @@ EN.Mark = (function () {
    *   answers:   [String]          exemplars — 3–5 genuinely different valid answers
    *   nearMiss:  [String]          semantically close but WRONG (§6.5.4)
    *   prompt:    String            added to nearMiss automatically (§9.8)
-   *   threshold: Number            per-prompt, from tests/calibrate.js
+   *   threshold: Number            per-prompt, from tests/suites/calibrate.js
    *   domain:    String            grouping label, for calibration reporting
    * }
    *

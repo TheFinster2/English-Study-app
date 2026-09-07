@@ -99,6 +99,62 @@ module.exports = {
     t.atMost((tell.length / qs.length) * 100, 12,
              "share of questions where only a distractor uses an absolute (%)");
     t.note(tell.length + " questions put an absolute in a distractor but not the key");
+
+    /* ── the Marking Desk, which is not multiple choice ──────────
+       Everything above asks whether the MCQ bank can be beaten without reading the
+       question. The Marking Desk can be attacked the same way by a different route: five
+       bands with partial credit for being one out, and five present/absent descriptors
+       whose base rates are nowhere near 50/50.
+
+       The mode's header used to claim that guessing "collects the ±1 partial on some
+       samples and nothing else". It does considerably better than that, and three
+       alternative scoring rules were measured before leaving the arithmetic alone — a
+       tighter ±1 credit, a double penalty on wrong ticks, and all-or-nothing steps each
+       moved the guesser and an honest marker by the same amount. The gap is set by the
+       base rates in the data, so the numbers are pinned HERE, where a rebalance of the
+       paragraph bank would show up. */
+    let paras = [];
+    Object.keys(EN.DATA).forEach(k => {
+      const v = EN.DATA[k];
+      if (Array.isArray(v) && v[0] && v[0].band !== undefined && v[0].para) paras = paras.concat(v);
+    });
+    const descIds = (EN.DATA.descriptors || []).map(d => d.id);
+    const BAND_CREDIT = [1, 0.45, 0, 0, 0];
+
+    t.atLeast(paras.length, 40, "paragraphs to mark");
+    t.atLeast(descIds.length, 5, "descriptors to tick");
+
+    /* An even spread is what stops "always answer the commonest band" being a strategy at
+       all — without it the guesser's floor rises with the skew. */
+    const spread = {};
+    paras.forEach(p => (spread[p.band] = (spread[p.band] || 0) + 1));
+    const counts = Object.keys(spread).map(k => spread[k]);
+    const evenness = Math.min.apply(null, counts) / Math.max.apply(null, counts);
+    t.atLeast(evenness, 0.6, "bands are evenly spread " + JSON.stringify(spread));
+
+    let bestBand = 0, bestBandAt = null;
+    for (let b = 1; b <= 6; b++) {
+      const share = paras.reduce((n, p) =>
+        n + BAND_CREDIT[Math.min(4, Math.abs(b - p.band))], 0) / paras.length;
+      if (share > bestBand) { bestBand = share; bestBandAt = b; }
+    }
+    const common = {};
+    descIds.forEach(d => (common[d] = paras.filter(p => p.descriptors[d]).length > paras.length / 2));
+    const descShare = paras.reduce((n, p) => {
+      let right = 0, wrong = 0;
+      descIds.forEach(d => (!!p.descriptors[d] === common[d] ? right++ : wrong++));
+      return n + Math.max(0, right - wrong) / descIds.length;
+    }, 0) / paras.length;
+
+    const guesser = (bestBand + descShare) / 2;
+    t.note("marking desk: best fixed guess is band " + bestBandAt + " at " +
+           Math.round(bestBand * 100) + "% band credit, commonest tick pattern " +
+           Math.round(descShare * 100) + "% — a guesser scores " +
+           Math.round(guesser * 100) + "%");
+    /* Not "near zero" — that was the false claim. What must hold is that it stays well
+       under a figure that would read as competence. */
+    t.atMost(guesser * 100, 55, "what a pure guesser scores on the Marking Desk (%)");
+    t.atMost(bestBand * 100, 50, "band credit collected by the best single fixed band (%)");
   }
 };
 

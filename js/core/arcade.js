@@ -5,7 +5,7 @@
 
    That is enforced STRUCTURALLY: nothing in this file and nothing in js/games/arcade-*.js
    calls UI.award(). It is not a promise in a comment, it is the absence of a call, and
-   tests/arcade.js proves XP, level and Marks are untouched by playing. An endless runner
+   tests/suites/arcade.js proves XP, level and Marks are untouched by playing. An endless runner
    paying even 1 XP per second beats studying, and the reference app nearly shipped one.
 
    The clock runs only while an arcade game is on screen — `tick()` is driven by the game

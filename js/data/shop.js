@@ -1,6 +1,6 @@
 /* The Shop: power-ups, supply crates, and the arcade's ticket prices.
    Marks (✒️) are deliberately scarce — award() pays coins at 60% — so everything here
-   costs something. tests/economy.js prints the effort-per-purchase table if it ever
+   costs something. tests/suites/economy.js prints the effort-per-purchase table if it ever
    needs retuning. */
 window.EN = window.EN || {};
 EN.DATA = EN.DATA || {};
@@ -41,7 +41,7 @@ EN.DATA.shop = {
   ],
 
   /* Arcade playtime, rented in minutes. Priced against a run that nominally pays 1000
-     so the effort-per-ticket ratio is a number tests/economy.js can print. */
+     so the effort-per-ticket ratio is a number tests/suites/economy.js can print. */
   tickets: [
     { id:"t5",  minutes:5,  price:250,  label:"5 minutes" },
     { id:"t15", minutes:15, price:660,  label:"15 minutes" },

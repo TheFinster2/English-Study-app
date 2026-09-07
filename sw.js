@@ -8,7 +8,7 @@
    Three rules this file exists to keep:
 
      1. `CACHE` must move on every deploy, and `PRECACHE` must list every file the app
-        loads. tests/offline.js walks index.html and asserts the two agree — a shell
+        loads. tests/suites/offline.js walks index.html and asserts the two agree — a shell
         that loads a script the worker never cached works perfectly on the developer's
         machine and fails on a train, which is the only place it matters.
 
@@ -16,7 +16,7 @@
         js/core/mark.js and holds 23 MB the student chose to download. The activate
         handler deletes stale caches by prefix and must never match it — shipping a
         typo'd stylesheet and silently costing somebody 23 MB of mobile data would be
-        indefensible. tests/update.js asserts a version bump leaves the bucket intact.
+        indefensible. tests/suites/offline.js asserts the sweep excludes the bucket.
 
      3. Navigation requests fall back to the cached index.html, because the app is a
         single document behind a hash router. Without this, opening a bookmark to
@@ -27,7 +27,7 @@ const CACHE = "closereading-v1.4.0";
 const MODEL_CACHE = "closereading-model-v1";   // owned by mark.js — do not delete
 
 /* Every file the app loads, in the order index.html loads them. Kept in sync by hand and
-   checked by tests/offline.js, which parses index.html rather than trusting this list. */
+   checked by tests/suites/offline.js, which parses index.html rather than trusting it. */
 const PRECACHE = [
   "./",
   "index.html",

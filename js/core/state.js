@@ -204,7 +204,7 @@ EN.State = (function () {
   /* ── levelling ───────────────────────────────────────────── */
   /* A whole-HSC-year progression on purpose: level 20 is ~87,000 XP and level 60 about
      1.42 million. The reference app's student asked for it to be harder than the first
-     tuning, so this is not to be softened. tests/economy.js prints the effort table if
+     tuning, so this is not to be softened. tests/suites/economy.js prints the effort table if
      it ever does need retuning. */
   const xpNeeded = level => Math.round(130 * Math.pow(level, 1.5));
   const MAX_LEVEL = 60;

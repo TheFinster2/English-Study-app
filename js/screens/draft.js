@@ -8,7 +8,7 @@
 
    It gives NO XP, NO Marks and NO marking, and that is enforced structurally: nothing in
    this file calls UI.award(), and `State.saveDraft` (state.js) calls neither addXP nor
-   addCoins. tests/exploit.js proves an hour at the desk moves neither XP nor Marks.
+   addCoins. tests/suites/economy.js greps this file for the call, comments stripped.
 
    The one thing the desk does touch is `stats.draftWords`, which two collection
    achievements read — and that is recomputed as the sum over *kept drafts*, never

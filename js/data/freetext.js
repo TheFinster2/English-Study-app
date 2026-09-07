@@ -14,12 +14,12 @@
    distractors, pointed at the marker instead. They are what stops the app confidently
    accepting the opposite of the right answer, which embeddings will otherwise do —
    "Hotspur values honour above pragmatism" and its inversion score 0.974 against each
-   other (measured, tests/embed-harness.js).
+   other (measured; the backstop that catches it is asserted in tests/suites/marking.js).
 
    mark.js adds the prompt itself to nearMiss at runtime, so pasting the question back
    is closed off without authoring anything (§9.8).
 
-   `threshold` is set by tests/calibrate.js against ~120 hand-labelled responses, not
+   `threshold` is set by tests/suites/calibrate.js against the hand-labelled set, not
    guessed. Prompts left at DEFAULT use Mark.DEFAULT_THRESHOLD.
    ============================================================================ */
 window.EN = window.EN || {};

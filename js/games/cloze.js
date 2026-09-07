@@ -3,7 +3,7 @@
    English's answer to chemistry's numeric problem generator: infinite, deterministic,
    and it drills the thing HSC students most reliably lose marks for.
 
-   Difficulty contract (§9.10), asserted in tests/validate.js:
+   Difficulty contract (§9.10), asserted in tests/suites/validate.js:
      • deletion rate rises with the card's Leitner box: 0.18 → 0.50
      • only CONTENT words are ever deleted; articles and prepositions never are
      • words inside the quote's `span` are deleted before any word outside it
